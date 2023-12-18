@@ -1,5 +1,5 @@
-from semantic_aug.generative_augmentation import GenerativeAugmentation
-from diffusers import StableDiffusionImg2ImgPipeline
+from semantic_aug.generative_augmentation import GenerativeMixup
+from diffusers import StableDiffusionImg2ImgPipeline,DPMSolverMultistepScheduler
 from diffusers import StableDiffusionInpaintPipeline
 from transformers import (
     CLIPFeatureExtractor, 
@@ -25,14 +25,15 @@ Please pass a different `token` that is not already in the tokenizer."
 
 
 def load_embeddings(embed_path: str,
-                    model_path: str = "CompVis/stable-diffusion-v1-4"):
+                    model_path: str = "runwayml/stable-diffusion-v1-5",
+                    revision: str = '39593d5650112b4cc580433f6b0435385882d819'):
 
     tokenizer = CLIPTokenizer.from_pretrained(
-        model_path, use_auth_token=True,
+        model_path, use_auth_token=True,revision=revision,
         subfolder="tokenizer")
 
     text_encoder = CLIPTextModel.from_pretrained(
-        model_path, use_auth_token=True, 
+        model_path, use_auth_token=True, revision=revision,
         subfolder="text_encoder")
 
     for token, token_embedding in torch.load(
@@ -53,49 +54,50 @@ def load_embeddings(embed_path: str,
         embeddings.weight.data[added_token_id] = \
             token_embedding.to(embeddings.weight.dtype)
 
-    return tokenizer, text_encoder.to('cuda')
+    return tokenizer, text_encoder
 
 
 def format_name(name):
     return f"<{name.replace(' ', '_')}>"
 
 
-class TextualInversion(GenerativeAugmentation):
+class TextualInversionMixup(GenerativeMixup):
 
     pipe = None  # global sharing is a hack to avoid OOM
 
     def __init__(self, embed_path: str, 
-                 model_path: str = "CompVis/stable-diffusion-v1-4",
+                 model_path: str = "runwayml/stable-diffusion-v1-5",
                  prompt: str = "a photo of a {name}",
                  format_name: Callable = format_name,
-                 strength: float = 0.5, 
                  guidance_scale: float = 7.5,
                  mask: bool = False,
                  inverted: bool = False,
                  mask_grow_radius: int = 16,
-                 erasure_ckpt_path: str = None,
                  disable_safety_checker: bool = True,
+                 revision: str = '39593d5650112b4cc580433f6b0435385882d819',
+                 device="cuda", 
                  **kwargs):
 
-        super(TextualInversion, self).__init__()
+        super().__init__()
 
-        if TextualInversion.pipe is None:
+        if TextualInversionMixup.pipe is None:
 
             PipelineClass = (StableDiffusionInpaintPipeline 
                              if mask else 
                              StableDiffusionImg2ImgPipeline)
 
             tokenizer, text_encoder = load_embeddings(
-                embed_path, model_path=model_path)
+                embed_path, model_path=model_path,revision=revision)
 
-            TextualInversion.pipe = PipelineClass.from_pretrained(
+            TextualInversionMixup.pipe = PipelineClass.from_pretrained(
                 model_path, use_auth_token=True,
-                revision="fp16", 
+                revision=revision, 
                 torch_dtype=torch.float16
-            ).to('cuda')
-
+            ).to(device)
+            scheduler = DPMSolverMultistepScheduler.from_config(TextualInversionMixup.pipe.scheduler.config)
+            TextualInversionMixup.pipe.scheduler = scheduler
             self.pipe.tokenizer = tokenizer
-            self.pipe.text_encoder = text_encoder
+            self.pipe.text_encoder = text_encoder.to(device)
 
             logging.disable_progress_bar()
             self.pipe.set_progress_bar_config(disable=True)
@@ -104,7 +106,6 @@ class TextualInversion(GenerativeAugmentation):
                 self.pipe.safety_checker = None
 
         self.prompt = prompt
-        self.strength = strength
         self.guidance_scale = guidance_scale
         self.format_name = format_name
 
@@ -112,11 +113,10 @@ class TextualInversion(GenerativeAugmentation):
         self.inverted = inverted
         self.mask_grow_radius = mask_grow_radius
 
-        self.erasure_ckpt_path = erasure_ckpt_path
         self.erasure_word_name = None
 
     def forward(self, image: Image.Image, label: int, 
-                metadata: dict) -> Tuple[Image.Image, int]:
+                metadata: dict, strength: float=0.5) -> Tuple[Image.Image, int]:
 
         canvas = image.resize((512, 512), Image.BILINEAR)
         name = self.format_name(metadata.get("name", ""))
@@ -127,30 +127,15 @@ class TextualInversion(GenerativeAugmentation):
         
         word_name = metadata.get("name", "").replace(" ", "")
 
-        if self.erasure_ckpt_path is not None and (
-                self.erasure_word_name is None 
-                or self.erasure_word_name != word_name):
-
-            self.erasure_word_name = word_name
-            ckpt_name = "method_full-sg_3-ng_1-iter_1000-lr_1e-05"
-
-            ckpt_path = os.path.join(
-                self.erasure_ckpt_path, 
-                f"compvis-word_{word_name}-{ckpt_name}",
-                f"diffusers-word_{word_name}-{ckpt_name}.pt")
-    
-            self.pipe.unet.load_state_dict(torch.load(
-                ckpt_path, map_location='cuda'))
-
         kwargs = dict(
             image=canvas,
             prompt=[prompt], 
-            strength=self.strength, 
+            strength=strength, 
             guidance_scale=self.guidance_scale
         )
 
         if self.mask:  # use focal object mask
-
+            # TODO
             mask_image = Image.fromarray((
                 np.where(metadata["mask"], 255, 0)
             ).astype(np.uint8)).resize((512, 512), Image.NEAREST)

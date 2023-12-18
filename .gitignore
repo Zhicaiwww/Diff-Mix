@@ -3,6 +3,8 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+src/
+da-fusion/
 # images
 *.png
 *.jpg
