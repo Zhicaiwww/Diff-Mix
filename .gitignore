@@ -4,7 +4,9 @@ __pycache__/
 *$py.class
 
 src/
-da-fusion/
+Diff-Mix/
+notebook/
+_others/
 # images
 *.png
 *.jpg

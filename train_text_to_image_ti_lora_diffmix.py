@@ -372,25 +372,25 @@ def parse_args():
         "--examples_per_class",
         type=int,
         default=-1,
-        help=("The dimension of the LoRA update matrices."),
+        help="available examples per class",
     )
     parser.add_argument(
         "--ti_only",
         action='store_true',
+        help="Set true if only textual embedding is tunable",
     )
     parser.add_argument(
         "--task",
         type=str,
         default='vanilla',
         choices=['vanilla', 'imbalanced'],
-        help=("The dimension of the LoRA update matrices."),
+        help=("Vanilla for few-shot or conventional classification, 'imbalanced' for imbalanced classification"),
     )
     parser.add_argument(
         "--imbalanced_factor",
         type=float,
         default=0.1,
         choices=[0.1, 0.05, 0.01],
-        help=("The dimension of the LoRA update matrices."),
     )
     args = parser.parse_args()
     env_local_rank = int(os.environ.get("LOCAL_RANK", -1))

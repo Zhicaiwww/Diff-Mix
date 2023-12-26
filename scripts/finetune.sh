@@ -1,13 +1,10 @@
-
 export MODEL_NAME="runwayml/stable-diffusion-v1-5"
-
-
 
 function finetune {
     dataset=$1
     strategy=${2:-'ti_db'}
     shot=${3:-'-1'}
-    nepoch=${4:-100}
+    max_steps=${4:-35000}
     batchsize=${5:-2}
 
     if [ "$strategy" == 'ti_db' ] || [ "$strategy" == 'ti' ]; then
@@ -30,7 +27,7 @@ function finetune {
         --pretrained_model_name_or_path='$MODEL_NAME' \
         --dataset_name='$dataset' --caption_column='text' \
         --resolution='$resolution' --random_flip \
-        --train_batch_size='$batchsize' \
+        --max_train_steps='$max_steps' \
         --num_train_epochs=$nepoch --checkpointing_steps=5000 \
         --learning_rate=5e-05 \
         --lr_scheduler='constant' --lr_warmup_steps=0 \
@@ -56,7 +53,7 @@ function finetune_ti_db_imbalanced {
     --dataset_name=$dataset --caption_column="text" \
     --resolution=$resolution --random_flip \
     --train_batch_size=$batchsize \
-    --num_train_epochs=100 --checkpointing_steps=5000\
+    --max_train_steps=35000 --checkpointing_steps=5000\
     --learning_rate=5e-05 \
     --lr_scheduler="constant" --lr_warmup_steps=0 \
     --seed=42 \
@@ -77,7 +74,7 @@ function finetune_db_imbalanced {
     --dataset_name=$dataset --caption_column="text" \
     --resolution=$resolution --random_flip \
     --train_batch_size=$batchsize \
-    --num_train_epochs=50 --checkpointing_steps=5000\
+    --max_train_steps=35000 --checkpointing_steps=5000\
     --learning_rate=5e-05 \
     --lr_scheduler="constant" --lr_warmup_steps=0 \
     --seed=42 \

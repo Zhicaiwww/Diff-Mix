@@ -17,7 +17,7 @@ export CUDA_VISIBLE_DEVICES='5,6,7'
 resolution=512
 batchsize=2
 # finetune car 'ti_db' 5
-gpu_ids=(0 0 0 1 1 1 2 2 2)
+GPU_IDS=(0 0 0 1 1 1 2 2 2)
 
 # main
 ## ---------------------------------------------

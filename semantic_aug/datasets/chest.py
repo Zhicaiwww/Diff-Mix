@@ -1,8 +1,5 @@
 import sys 
 import os
-sys.path.append(os.getcwd())
-os.environ["http_proxy"]="http://localhost:8890"
-os.environ["https_proxy"]="http://localhost:8890"
 from semantic_aug.few_shot_dataset import FewShotDataset, HugFewShotDataset
 from semantic_aug.datasets.utils import IMAGENET_TEMPLATES_SMALL 
 from semantic_aug.generative_augmentation import GenerativeAugmentation

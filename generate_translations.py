@@ -10,11 +10,10 @@ import time
 import numpy as np
 import pandas as pd
 import math
-sys.path.append('/data/zhicai/code/da-fusion/')
-from base.proxy import set_proxy
+sys.path.append('/data/zhicai/code/Diff-Mix/')
 os.environ['CURL_CA_BUNDLE'] = ''
 
-from utils import DATASET_NAME_MAPPING,IMBALANCE_DATASET_NAME_MAPPING, AUGMENT,parse_finetuned_ckpt
+from utils import DATASET_NAME_MAPPING,IMBALANCE_DATASET_NAME_MAPPING, AUGMENT, parse_finetuned_ckpt
 from tqdm import tqdm
 from PIL import Image
 from itertools import product
@@ -276,8 +275,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser("Inference script")
     parser.add_argument("--output-root", type=str, default='outputs/aug_samples')
     parser.add_argument("--model-path", type=str, default="CompVis/stable-diffusion-v1-4")
-    parser.add_argument("--lora-path", type=str, default=None)
-    parser.add_argument("--embed-path", type=str, default=None)
     parser.add_argument("--confusion-matrix-path", type=str, default=None)
     parser.add_argument("--dataset", type=str, default="pascal")
     parser.add_argument("--seed", type=int, default=0)
@@ -303,44 +300,12 @@ if __name__ == "__main__":
     parser.add_argument("--aug_strength", type = float, default = None)
     args = parser.parse_args()
 
-
     # Please check the corresponding ckpt path before sampling !!! 
 
+    torch.multiprocessing.set_start_method('spawn')
     os.makedirs(os.path.join(args.output_root, args.dataset), exist_ok=True)
+    output_name = check_args_videlity(args)
+    args.output_path = os.path.join(args.output_root, args.dataset ,output_name)
     
-    hyper_sweep = False
-    if  hyper_sweep: 
-        args.gpu_ids = [0,0,0,1,2,2,2,5,5]
-        aug_strategy_list = ["dreambooth-lora-augmentation"]
-        datset_list = ['cub']
-        mask_list = [0]
-        syn_dataset_mulitiplier_list = [7]
-        beta_strength_list = [None]
-        aug_strength_list = [0.9]
-        finetune_model_key = 'db_ti35000'
-
-        torch.multiprocessing.set_start_method('spawn')
-        for dataset_name, aug_strategy, mask, syn_dataset_mulitiplier, beta_strength, aug_strength in \
-                                                        product(datset_list, 
-                                                                aug_strategy_list,
-                                                                mask_list,
-                                                                syn_dataset_mulitiplier_list,
-                                                                beta_strength_list,
-                                                                aug_strength_list):
-            args.dataset = dataset_name
-            args.syn_dataset_mulitiplier = syn_dataset_mulitiplier
-            args.aug_strategy = aug_strategy
-            args.beta_strength = beta_strength
-            args.mask = mask
-            args.aug_strength = round(aug_strength,2) if aug_strength is not None else None
-            output_name = check_args_videlity(args)
-            args.output_path = os.path.join(args.output_root, args.dataset ,output_name)
-            print(args.output_path)
-            main(args)
-    else:
-        torch.multiprocessing.set_start_method('spawn')
-        output_name = check_args_videlity(args)
-        args.output_path = os.path.join(args.output_root, args.dataset ,output_name)
-        print(args.output_path)
-        main(args)
+    main(args)
 

@@ -48,18 +48,16 @@ def syn_collate_fn(examples):
     src_labels.to(dtype=dtype)
     tar_labels.to(dtype=dtype)
     return {'pixel_values': pixel_values, 'src_labels':src_labels, 'tar_labels':tar_labels}
+
 def main(args):
     device = f"cuda:{args.gpu}"
     bs = args.batch_size
     model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32", local_files_only=True).to(device)
     processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32", local_files_only=True)
     synthetic_dir = parse_synthetic_dir(args.dataset, synthetic_type=args.synthetic_type)
-    threshold = 0.6
     ds_syn = SyntheticDataset(synthetic_dir)
     ds_syn.transform = torch.nn.Identity()
     dataloader_syn = torch.utils.data.DataLoader(ds_syn, batch_size=bs,collate_fn=syn_collate_fn, shuffle=False, num_workers=4)
-    # image = ds.get_image_by_idx(0)
-    # filtered_array = []
     positive_confidence=[]
 
     for batch in tqdm.tqdm(dataloader_syn, total=len(dataloader_syn)):
@@ -71,33 +69,23 @@ def main(args):
         logits_per_image = outputs.logits_per_image # this is the image-text similarity score
         probs = logits_per_image.softmax(dim=1) # we can take the softmax to get the label probabilities
         probs = probs.cpu().detach().numpy()
-
-        # filtered_array = np.concatenate((filtered_array, np.where(probs[:,0] < threshold, 1, 0)))
-        # filtered_count = np.sum(filtered_array).astype(int)
-        # num = len(filtered_array)
-        # filtered_ratio = np.round(filtered_count/num,4)
-        # print(f"filtered_ration %{filtered_ratio*100}", f"{filtered_count}/{num}")
         positive_confidence = np.concatenate((positive_confidence, probs[:,0]))
     # filter the least 10% confident samples 
     positive_confidence = np.array(positive_confidence)
-    bottom_threshold = np.percentile(positive_confidence, 5)
-    up_threshold = np.percentile(positive_confidence, 95)
-    print("threshold:",threshold)
-    # filtered_positive_confidence = positive_confidence[]
-    # meta_df = copy.deepcopy(ds_syn.meta_df)
-    # meta_df.loc[:,'Path'] = ds_syn.meta_df['Path'].apply(lambda x: os.path.join(_dir,'data',x))
+    bottom_threshold = np.percentile(positive_confidence, 10)
+    up_threshold = np.percentile(positive_confidence, 90)
     meta_df = pd.read_csv(os.path.join(synthetic_dir,'meta.csv'))
     meta_df1 = meta_df[positive_confidence >= bottom_threshold]
     meta_df2 = meta_df[positive_confidence < bottom_threshold]
     meta_df3 = meta_df[positive_confidence >= up_threshold]
 
-    meta_df1.to_csv(os.path.join(synthetic_dir,'meta_5-100per.csv'), index=False)
-    meta_df2.to_csv(os.path.join(synthetic_dir,'meta_0-5per.csv'), index=False)
-    meta_df3.to_csv(os.path.join(synthetic_dir,'meta_95-100per.csv'), index=False)
+    meta_df1.to_csv(os.path.join(synthetic_dir,'meta_10-100per.csv'), index=False)
+    meta_df2.to_csv(os.path.join(synthetic_dir,'meta_0-10per.csv'), index=False)
+    meta_df3.to_csv(os.path.join(synthetic_dir,'meta_90-100per.csv'), index=False)
 
-# python clip_data_filter.py --dataset 'cub' -g 2 --synthetic_type mixup_uniform -b 200
-# python clip_data_filter.py --dataset 'aircraft' -g 3 --synthetic_type mixup_uniform -b 200
-# python clip_data_filter.py --dataset 'dog' -g 3 --synthetic_type mixup_uniform -b 200
+# python data_cleaning.py --dataset 'cub' -g 2 --synthetic_type mixup_uniform -b 200
+# python data_cleaning.py --dataset 'aircraft' -g 3 --synthetic_type mixup_uniform -b 200
+# python data_cleaning.py --dataset 'dog' -g 3 --synthetic_type mixup_uniform -b 200
 if __name__ == '__main__':
     parsers=argparse.ArgumentParser()
     parsers.add_argument('--dataset', type=str, default='cub')

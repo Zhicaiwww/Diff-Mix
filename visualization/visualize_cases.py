@@ -1,14 +1,13 @@
 import os
-import torch
-import huggingface_hub
 import sys
+import random
+os.environ["DISABLE_TELEMETRY"] = 'YES'
 sys.path.append('../')
-from base.utils import visualize_images
+
+from utils import visualize_images
 from diffusers import StableDiffusionImg2ImgPipeline, StableDiffusionPipeline
 from semantic_aug.augmentations.textual_inversion import load_embeddings
-import random
 from utils import DATASET_NAME_MAPPING, AUGMENT, parse_finetuned_ckpt
-os.environ["DISABLE_TELEMETRY"] = 'YES'
 
 def synthesize_images(model, strength, train_dataset,source_label=1, target_label=2, source_image=None):
     num = 1

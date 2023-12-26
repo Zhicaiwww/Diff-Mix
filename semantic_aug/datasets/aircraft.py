@@ -1,7 +1,5 @@
 import sys 
 import os
-sys.path.append(os.getcwd())
-
 from semantic_aug.few_shot_dataset import FewShotDataset, HugFewShotDataset
 from semantic_aug.datasets.utils import IMAGENET_TEMPLATES_SMALL 
 from semantic_aug.generative_augmentation import GenerativeAugmentation
@@ -18,17 +16,18 @@ from PIL import Image
 from collections import defaultdict
 from datasets import load_dataset
 SUPER_CLASS_NAME = 'aircraft'
-DEFAULT_IMAGE_TRAIN_DIR = r"Multimodal-Fatima/FGVC_Aircraft_train"
-DEFAULT_IMAGE_TEST_DIR = r"Multimodal-Fatima/FGVC_Aircraft_test"
-
+HUG_IMAGE_TRAIN_DIR = r"Multimodal-Fatima/FGVC_Aircraft_train"
+HUG_IMAGE_TEST_DIR = r"Multimodal-Fatima/FGVC_Aircraft_test"
+HUG_LOCAL_IMAGE_TRAIN_DIR = '/home/zhicai/.cache/huggingface/datasets/Multimodal-Fatima___parquet/Multimodal-Fatima--FGVC_Aircraft_train-d13c51225819e71f'
+HUG_LOCAL_IMAGE_TEST_DIR = '/home/zhicai/.cache/huggingface/datasets/Multimodal-Fatima___parquet/Multimodal-Fatima--FGVC_Aircraft_test-2d1cae4ba1777be1'
 
 class AircraftHugDataset(HugFewShotDataset):
 
     super_class_name = SUPER_CLASS_NAME
 
     def __init__(self, *args, split: str = "train", seed: int = 0, 
-                 image_train_dir: str = DEFAULT_IMAGE_TRAIN_DIR, 
-                 image_test_dir: str = DEFAULT_IMAGE_TEST_DIR, 
+                 image_train_dir: str = HUG_LOCAL_IMAGE_TRAIN_DIR, 
+                 image_test_dir: str = HUG_LOCAL_IMAGE_TEST_DIR, 
                  examples_per_class: int = -1, 
                  synthetic_probability: float = 0.5,
                  return_onehot: bool = False,
@@ -44,9 +43,9 @@ class AircraftHugDataset(HugFewShotDataset):
             synthetic_dir=synthetic_dir,image_size=image_size, crop_size=crop_size, **kwargs)    
 
         if split == 'train':
-            dataset = load_dataset('/home/zhicai/.cache/huggingface/datasets/Multimodal-Fatima___parquet/Multimodal-Fatima--FGVC_Aircraft_train-d13c51225819e71f',split='train')
+            dataset = load_dataset(HUG_LOCAL_IMAGE_TRAIN_DIR,split='train')
         else:
-            dataset = load_dataset('/home/zhicai/.cache/huggingface/datasets/Multimodal-Fatima___parquet/Multimodal-Fatima--FGVC_Aircraft_test-2d1cae4ba1777be1',split='test')
+            dataset = load_dataset(HUG_LOCAL_IMAGE_TEST_DIR,split='test')
 
         # self.class_names = [name.replace('/',' ') for name in dataset.features['label'].names]
 
@@ -105,7 +104,7 @@ class AircraftHugDatasetForT2I(torch.utils.data.Dataset):
 
     def __init__(self, *args, split: str = "train",
                  seed: int = 0, 
-                 image_train_dir: str = DEFAULT_IMAGE_TRAIN_DIR, 
+                 image_train_dir: str = HUG_LOCAL_IMAGE_TRAIN_DIR, 
                  max_train_samples: int = -1,
                  class_prompts_ratio: float = 0.5,
                  resolution: int = 512,

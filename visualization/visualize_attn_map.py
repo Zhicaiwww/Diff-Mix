@@ -32,7 +32,6 @@ class AttentionVisualizer:
                 batch_size, sequence_length, _ = (
                     hidden_states.shape if encoder_hidden_states is None else encoder_hidden_states.shape
                 )
-                # TODO
                 attention_mask=unet.prepare_attention_mask(attention_mask, sequence_length, batch_size)                
                 if hasattr(unet, 'preocessor'):
                     query = unet.to_q(hidden_states) + scale * unet.processor.to_q_lora(hidden_states)
@@ -145,24 +144,26 @@ def synthesize_images(model,
         plot_attn_map(attn_map, path=path)
     return image
 
-dataset_list = ['cub']
-aug = 'dreambooth-lora-mixup' #'dreambooth-lora-augmentation/mixup" "real-mixup"
-finetune_model_key = 'db_latest'
-guidance_scale = 7
-prompt = "a photo of a {name}"
+
+if __name__ == '__main__':
+    dataset_list = ['cub']
+    aug = 'dreambooth-lora-mixup' #'dreambooth-lora-augmentation/mixup" "real-mixup"
+    finetune_model_key = 'db_latest'
+    guidance_scale = 7
+    prompt = "a photo of a {name}"
 
 
- 
-for dataset in dataset_list:
-    lora_path, embed_path = parse_finetuned_ckpt(dataset=dataset, finetune_model_key=finetune_model_key)
-    AUGMENT[aug].pipe=None
-    model = AUGMENT[aug](
-        embed_path=embed_path,
-        lora_path=lora_path, 
-        prompt=prompt, 
-        guidance_scale=guidance_scale,
-        mask=False, 
-        inverted=False,
-        device=f'cuda:1'
-        )
-    image = synthesize_images(model, 0.5, dataset,finetune_model_key=finetune_model_key,source_label=13, target_label=2, source_image=None,seed=0)
+    
+    for dataset in dataset_list:
+        lora_path, embed_path = parse_finetuned_ckpt(dataset=dataset, finetune_model_key=finetune_model_key)
+        AUGMENT[aug].pipe=None
+        model = AUGMENT[aug](
+            embed_path=embed_path,
+            lora_path=lora_path, 
+            prompt=prompt, 
+            guidance_scale=guidance_scale,
+            mask=False, 
+            inverted=False,
+            device=f'cuda:1'
+            )
+        image = synthesize_images(model, 0.5, dataset,finetune_model_key=finetune_model_key,source_label=13, target_label=2, source_image=None,seed=0)

@@ -1,6 +1,5 @@
 import sys 
 import os
-sys.path.append(os.getcwd())
 from semantic_aug.few_shot_dataset import FewShotDataset, HugFewShotDataset
 from semantic_aug.datasets.utils import IMAGENET_TEMPLATES_SMALL 
 from semantic_aug.generative_augmentation import GenerativeAugmentation
@@ -18,8 +17,8 @@ from collections import defaultdict
 from datasets import load_dataset
 
 SUPER_CLASS_NAME='car'
-DEFAULT_IMAGE_TRAIN_DIR = r"Multimodal-Fatima/StanfordCars_train"
-DEFAULT_IMAGE_TEST_DIR = r"Multimodal-Fatima/StanfordCars_test"
+HUG_LOCAL_IMAGE_TRAIN_DIR = r"Multimodal-Fatima/StanfordCars_train"
+HUG_LOCAL_IMAGE_TEST_DIR = r"Multimodal-Fatima/StanfordCars_test"
 
 
 class CarHugDataset(HugFewShotDataset):
@@ -27,8 +26,8 @@ class CarHugDataset(HugFewShotDataset):
     super_class_name = SUPER_CLASS_NAME
 
     def __init__(self, *args, split: str = "train", seed: int = 0, 
-                 image_train_dir: str = DEFAULT_IMAGE_TRAIN_DIR, 
-                 image_test_dir: str = DEFAULT_IMAGE_TEST_DIR, 
+                 image_train_dir: str = HUG_LOCAL_IMAGE_TRAIN_DIR, 
+                 image_test_dir: str = HUG_LOCAL_IMAGE_TEST_DIR, 
                  examples_per_class: int = -1, 
                  synthetic_probability: float = 0.5,
                  return_onehot: bool = False,
@@ -105,7 +104,7 @@ class CarHugDatasetForT2I(torch.utils.data.Dataset):
 
     def __init__(self, *args, split: str = "train",
                  seed: int = 0, 
-                 image_train_dir: str = DEFAULT_IMAGE_TRAIN_DIR, 
+                 image_train_dir: str = HUG_LOCAL_IMAGE_TRAIN_DIR, 
                  max_train_samples: int = -1,
                  class_prompts_ratio: float = 0.5,
                  resolution: int = 512,

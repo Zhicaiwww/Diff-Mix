@@ -99,7 +99,7 @@ function run {
 # exit
 
 # export CUDA_VISIBLE_DEVICES='1,2,3,4,5,6'
-# gpu_ids=(0 0 0 1 1 1 2 2 2 3 3 3 4 4 4 5 5 5)
+# GPU_IDS=(0 0 0 1 1 1 2 2 2 3 3 3 4 4 4 5 5 5)
 # finetune_db_sample 'pascal'   
 # group_name='main_result_pascal'
 run all 1 2020 0.1 0.8  100 'pascal' &
@@ -279,7 +279,7 @@ wait
 # wait
 # finetune_ti_db_imbalanced 'cub' 0.01 2
 ####---------------------------------------------------------------------------------------
-gpu_ids=(0 0 0 1 1 1)
+GPU_IDS=(0 0 0 1 1 1)
 # sample_imbalance 'cub'      'db_ti_latest_imb_0.01'      'dreambooth-lora-mixup'         0.7     'fixed'  0.01   1       512;
 # im_cls_weightedSyn      6 cub 0.05      mixup0.7_imb0.05     0.3 0.5 &        
 # im_cls_weightedSyn      7 cub 0.01      mixup0.7_imb0.01     0.5 1.0 &         
@@ -309,7 +309,7 @@ wait
 #  main_cls           0  2022  'resnet50' '224' 'cub'       'mixup_uniform120000'    0.8    0.1 ;
 #  main_cls           0  2022  'resnet50' '224' 'cub'       'mixup_uniform160000'    0.8    0.1 ;
 #  main_cls           0  2022  'resnet50' '224' 'cub'       'mixup_uniform200000'    0.8    0.1 ;
-gpu_ids=(4 4 4 5 5 5 6 6 6 7 7 7)
+GPU_IDS=(4 4 4 5 5 5 6 6 6 7 7 7)
 # sample  'cub' 'db_ti_latest' 'dreambooth-lora-generation' 1  'fixed'   1 512 5
 # sample  'cub' 'db_ti_latest' 'real-mixup' 1  'fixed'   1 512 5
 # sample  'aircraft' 'db_ti_latest_e100' 'dreambooth-lora-generation' 1  'fixed'   1 512 5

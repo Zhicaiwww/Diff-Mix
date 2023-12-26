@@ -44,9 +44,8 @@ def generate_meta_csv(output_path):
             # 尝试加载图片
             img = Image.open(image_path)
             img.close()  
-            valid_rows.append(row)  # 如果成功加载图片，则保留该行
+            valid_rows.append(row) 
         except Exception as e:
-            # 如果加载图片时出错，删除该图片文件
             os.remove(image_path)
             print(f"Deleted {image_path} due to error: {str(e)}")
 
@@ -82,7 +81,6 @@ def main(source_directory_list, target_directory, num_samples):
     selected_image_files = [image_files[i] for i in random_indices]
     selected_image_class_names = [image_class_names[i] for i in random_indices]
 
-    # 将选定的图片复制到目标目录/data/zhicai/code/da-fusion/outputs/aug_samples_10shot
     for class_name, image_file in tqdm(zip(selected_image_class_names ,selected_image_files), desc='Copying data', total=num_samples):
         shutil.copy(image_file, os.path.join(target_directory, class_name))
 

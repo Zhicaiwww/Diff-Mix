@@ -1,5 +1,4 @@
 import sys
-sys.path.append('/data/zhicai/code/da-fusion')
 from semantic_aug.few_shot_dataset import FewShotDataset, HugFewShotDataset
 from semantic_aug.generative_augmentation import GenerativeAugmentation
 from typing import Any, Tuple, Dict
