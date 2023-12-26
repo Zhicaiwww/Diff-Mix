@@ -34,7 +34,6 @@ if __name__ == '__main__':
     seed = 0
     random.seed(seed)
     source_label=5
-    target_label=10
     for target_label in [4,7,6]:
         for dataset in ['pascal']:
             for aug in ['dreambooth-lora-mixup']:
