@@ -58,7 +58,7 @@ function main_cls {
     
     lr=$(get_learning_rate $dataset $model $res_mode)
     echo "train $dataset $model $res_mode $syn_type $soft_power $synthetic_prob $lr"
-    command="CUDA_VISIBLE_DEVICES=$gpu  python classification/cls/train_hub.py -d $dataset -g $gpu -a 2 -n `date +%m%d%H%M`$note -p $group_name -ne $nepoch --res_mode $res_mode --optimizer $optimizer --model $model  -lr $lr -sp $soft_power --seed $seed --weight_decay 0.0005 --syn_p $synthetic_prob"
+    command="CUDA_VISIBLE_DEVICES=$gpu  python downstream_tasks/cls/train_hub.py -d $dataset -g $gpu -a 2 -n `date +%m%d%H%M`$note -p $group_name -ne $nepoch --res_mode $res_mode --optimizer $optimizer --model $model  -lr $lr -sp $soft_power --seed $seed --weight_decay 0.0005 --syn_p $synthetic_prob"
     if [[ "${syn_type}" != 'None' ]]; then
         command="$command --syn_type $syn_type"
     fi
@@ -83,7 +83,7 @@ function main_cls_fewshot {
     lr=$(get_learning_rate $dataset $model $res_mode)
     echo "train $dataset $model $res_mode $syn_type $soft_power $synthetic_prob $lr"
 
-    command="CUDA_VISIBLE_DEVICES=$gpu  python classification/cls/train_hub.py -d $dataset -g $gpu -a 2 -n `date +%m%d%H%M` -p $group_name -ne $nepoch --res_mode $res_mode --optimizer $optimizer --model $model  -lr $lr -sp $soft_power --seed $seed --weight_decay 0.0005 --syn_p $synthetic_prob --examples_per_class $shot"
+    command="CUDA_VISIBLE_DEVICES=$gpu  python downstream_tasks/cls/train_hub.py -d $dataset -g $gpu -a 2 -n `date +%m%d%H%M` -p $group_name -ne $nepoch --res_mode $res_mode --optimizer $optimizer --model $model  -lr $lr -sp $soft_power --seed $seed --weight_decay 0.0005 --syn_p $synthetic_prob --examples_per_class $shot"
     if [[ "${syn_type}" != 'None' ]]; then
         command="$command --syn_type $syn_type"
     fi
@@ -105,7 +105,7 @@ function main_cls_mixup {
     local criterion=${10:-'ls'}
     lr=$(get_learning_rate $dataset $model $res_mode)
     echo "train_mixup $dataset $model $res_mode $syn_type $soft_power $synthetic_prob $lr"
-    command="CUDA_VISIBLE_DEVICES=$gpu  python classification/cls/train_hub.py -d $dataset -g $gpu -a 2 -n `date +%m%d%H%M` -p $group_name -ne $nepoch --res_mode $res_mode --optimizer $optimizer --model $model  -lr $lr -sp $soft_power --seed $seed --weight_decay 0.0001 --use_mixup --criterion $criterion --mixup_probability $mixup_probability"
+    command="CUDA_VISIBLE_DEVICES=$gpu  python downstream_tasks/cls/train_hub.py -d $dataset -g $gpu -a 2 -n `date +%m%d%H%M` -p $group_name -ne $nepoch --res_mode $res_mode --optimizer $optimizer --model $model  -lr $lr -sp $soft_power --seed $seed --weight_decay 0.0001 --use_mixup --criterion $criterion --mixup_probability $mixup_probability"
     if [[ "${syn_type}" != 'None' ]]; then
         command="$command --syn_type $syn_type"
     fi
@@ -126,7 +126,7 @@ function main_cls_cutmix {
     local criterion=${10:-'ls'}
     lr=$(get_learning_rate $dataset $model $res_mode)
     echo "train_cutmix $dataset $model $res_mode $syn_type $soft_power $synthetic_prob $lr"
-    command="CUDA_VISIBLE_DEVICES=$gpu  python classification/cls/train_hub.py -d $dataset -g $gpu -a 2 -n `date +%m%d%H%M` -p $group_name -ne $nepoch --res_mode $res_mode --optimizer $optimizer --model $model  -lr $lr -sp $soft_power --seed $seed --weight_decay 0.0001 --use_cutmix --criterion $criterion --mixup_probability $mixup_probability"
+    command="CUDA_VISIBLE_DEVICES=$gpu  python downstream_tasks/cls/train_hub.py -d $dataset -g $gpu -a 2 -n `date +%m%d%H%M` -p $group_name -ne $nepoch --res_mode $res_mode --optimizer $optimizer --model $model  -lr $lr -sp $soft_power --seed $seed --weight_decay 0.0001 --use_cutmix --criterion $criterion --mixup_probability $mixup_probability"
     if [[ "${syn_type}" != 'None' ]]; then
         command="$command --syn_type $syn_type"
     fi
@@ -146,7 +146,7 @@ function main_cls_params {
     local group_name=${10:-'main_result_params'}
     lr=$(get_learning_rate $dataset $model $res_mode)
     echo "train_params $dataset $model $res_mode $syn_type $soft_power $synthetic_prob $lr"
-    command="CUDA_VISIBLE_DEVICES=$gpu  python classification/cls/train_hub.py -d $dataset -g $gpu  --finetune_strategy $finetune_strategy -a 2 -n `date +%m%d%H%M` -p $group_name -ne $nepoch --res_mode '224' --optimizer $optimizer --model $model  -lr $lr -sp $soft_power --seed $seed  --criterion 'ls' --mixup_probability 0.1"
+    command="CUDA_VISIBLE_DEVICES=$gpu  python downstream_tasks/cls/train_hub.py -d $dataset -g $gpu  --finetune_strategy $finetune_strategy -a 2 -n `date +%m%d%H%M` -p $group_name -ne $nepoch --res_mode '224' --optimizer $optimizer --model $model  -lr $lr -sp $soft_power --seed $seed  --criterion 'ls' --mixup_probability 0.1"
     syn_type_arg="--syn_type $syn_type --weight_decay 0.0005"
     cutmix_arg=""
     command="$command $([ "$syn_type" != 'None' ] && echo "$syn_type_arg" || echo "$cutmix_arg")"
@@ -161,7 +161,7 @@ function im_cls {
     local imb_factor=$3
     local syn_type=${4:-'realmixup0.7_imb0.01'}
     local synthetic_probability=${5:-0.3}
-    python classification/imbalanced_cls/train_hub.py --dataset $datast    --loss_type CE --lr 0.005 --epochs 200 --imb_factor $imb_factor   -b 128  --gpu $gpu --data_aug vanilla   --root_log outputs/results_cmo --syn_type $syn_type --synthetic_probability $synthetic_probability;
+    python downstream_tasks/imbalanced_cls/train_hub.py --dataset $datast    --loss_type CE --lr 0.005 --epochs 200 --imb_factor $imb_factor   -b 128  --gpu $gpu --data_aug vanilla   --root_log outputs/results_cmo --syn_type $syn_type --synthetic_probability $synthetic_probability;
 }
 
 function im_cls_weightedSyn {
@@ -171,26 +171,26 @@ function im_cls_weightedSyn {
     local syn_type=${4:-'realmixup0.7_imb0.01'}
     local synthetic_probability=${5:-0.3}
     local soft_power=${6:-0.5}
-    python classification/imbalanced_cls/train_hub.py --dataset $datast    --loss_type CE --lr 0.005 --epochs 200 --imb_factor $imb_factor   -b 128  --gpu $gpu --data_aug vanilla   --root_log outputs/results_cmo --syn_type $syn_type --synthetic_probability $synthetic_probability --soft_power $soft_power --use_weighted_syn;
+    python downstream_tasks/imbalanced_cls/train_hub.py --dataset $datast    --loss_type CE --lr 0.005 --epochs 200 --imb_factor $imb_factor   -b 128  --gpu $gpu --data_aug vanilla   --root_log outputs/results_cmo --syn_type $syn_type --synthetic_probability $synthetic_probability --soft_power $soft_power --use_weighted_syn;
 }
 
 function im_cls_baseline {                             
     local gpu=$1
     local datast=$2
     local imb_factor=$3
-    python classification/imbalanced_cls/train_hub.py --dataset $datast    --loss_type CE --lr 0.005 --epochs 200 --imb_factor $imb_factor   -b 128  --gpu $gpu --data_aug vanilla   --root_log outputs/results_cmo ;
+    python downstream_tasks/imbalanced_cls/train_hub.py --dataset $datast    --loss_type CE --lr 0.005 --epochs 200 --imb_factor $imb_factor   -b 128  --gpu $gpu --data_aug vanilla   --root_log outputs/results_cmo ;
 }
 
 function im_cls_cmo {
     local gpu=$1
     local datast=$2
     local imb_factor=$3
-    python classification/imbalanced_cls/train_hub.py --dataset $datast    --loss_type CE --lr 0.005 --epochs 200 --imb_factor $imb_factor   -b 128  --gpu $gpu --data_aug vanilla   --root_log outputs/results_cmo --data_aug CMO;
+    python downstream_tasks/imbalanced_cls/train_hub.py --dataset $datast    --loss_type CE --lr 0.005 --epochs 200 --imb_factor $imb_factor   -b 128  --gpu $gpu --data_aug vanilla   --root_log outputs/results_cmo --data_aug CMO;
 }
 
 function im_cls_drw {
     local gpu=$1
     local datast=$2
     local imb_factor=$3
-    python classification/imbalanced_cls/train_hub.py --dataset $datast    --loss_type CE --lr 0.005 --epochs 200 --imb_factor $imb_factor   -b 128  --gpu $gpu --data_aug vanilla   --root_log outputs/results_cmo --train_rule DRW;
+    python downstream_tasks/imbalanced_cls/train_hub.py --dataset $datast    --loss_type CE --lr 0.005 --epochs 200 --imb_factor $imb_factor   -b 128  --gpu $gpu --data_aug vanilla   --root_log outputs/results_cmo --train_rule DRW;
 }
