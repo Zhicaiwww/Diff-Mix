@@ -7,7 +7,7 @@ sys.path.append('../')
 from utils import visualize_images
 from diffusers import StableDiffusionImg2ImgPipeline, StableDiffusionPipeline
 from semantic_aug.augmentations.textual_inversion import load_embeddings
-from utils import DATASET_NAME_MAPPING, AUGMENT, parse_finetuned_ckpt
+from utils import DATASET_NAME_MAPPING, AUGMENT_METHODS, parse_finetuned_ckpt
 
 def synthesize_images(model, strength, train_dataset,source_label=1, target_label=2, source_image=None):
     num = 1
@@ -25,7 +25,7 @@ def synthesize_images(model, strength, train_dataset,source_label=1, target_labe
 if __name__ == '__main__':
     device = 'cuda:1'
     dataset = 'pascal'
-    aug = 'dreambooth-lora-mixup' #'dreambooth-lora-augmentation/mixup" "real-mixup"
+    aug = 'diff-mix' #'diff-aug/mixup" "real-mix"
     finetune_model_key = 'db_latest_5shot'
     guidance_scale = 7
     strength_list = [0.1,0.3,0.5,0.7,0.9,1.0]
@@ -36,12 +36,12 @@ if __name__ == '__main__':
     source_label=5
     for target_label in [4,7,6]:
         for dataset in ['pascal']:
-            for aug in ['dreambooth-lora-mixup']:
+            for aug in ['diff-mix']:
                 train_dataset = DATASET_NAME_MAPPING[dataset](split="train",examples_per_class=5)
                 lora_path, embed_path = parse_finetuned_ckpt(dataset=dataset, finetune_model_key=finetune_model_key)
 
-                AUGMENT[aug].pipe=None
-                model = AUGMENT[aug](
+                AUGMENT_METHODS[aug].pipe=None
+                model = AUGMENT_METHODS[aug](
                     embed_path=embed_path,
                     lora_path=lora_path, 
                     prompt="a photo of a {name}", 

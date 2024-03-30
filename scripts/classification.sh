@@ -3,10 +3,6 @@
 # (0.00001        0.001             0.001               0.001               0.0005      0.0001   0.00005  0.00005   0.00005   0.00005)
 
 
-nepoch=150
-synthetic_prob=0.1
-soft_power=0.8
-optimizer='sgd'
 
 
 get_learning_rate() {
@@ -50,17 +46,17 @@ function main_cls {
     local model=$4
     local res_mode=$5
     local nepoch=${6:-150}
-    local syn_type=${7:-'None'}
-    local soft_power=${8:-'0.5'}
+    local syndata_key=${7:-'None'}
+    local gamma=${8:-'0.5'}
     local synthetic_prob=${9:-'0.1'}
     local target_class_num=${10:-'None'}
     local note=${11:-''}
     
     lr=$(get_learning_rate $dataset $model $res_mode)
-    echo "train $dataset $model $res_mode $syn_type $soft_power $synthetic_prob $lr"
-    command="CUDA_VISIBLE_DEVICES=$gpu  python downstream_tasks/cls/train_hub.py -d $dataset -g $gpu -a 2 -n `date +%m%d%H%M`$note -p $group_name -ne $nepoch --res_mode $res_mode --optimizer $optimizer --model $model  -lr $lr -sp $soft_power --seed $seed --weight_decay 0.0005 --syn_p $synthetic_prob"
-    if [[ "${syn_type}" != 'None' ]]; then
-        command="$command --syn_type $syn_type"
+    echo "train $dataset $model $res_mode $syndata_key $gamma $synthetic_prob $lr"
+    command="CUDA_VISIBLE_DEVICES=$gpu  python downstream_tasks/cls/train_hub.py -d $dataset -g $gpu -a 2 -n `date +%m%d%H%M`$note -p $group_name -ne $nepoch --res_mode $res_mode --optimizer $optimizer --model $model  -lr $lr -sp $gamma --seed $seed --weight_decay 0.0005 --syn_p $synthetic_prob"
+    if [[ "${syndata_key}" != 'None' ]]; then
+        command="$command --syndata_key $syndata_key"
     fi
     if [[ "${target_class_num}" != 'None' ]]; then
         command="$command --target_class_num $target_class_num"
@@ -76,41 +72,21 @@ function main_cls_fewshot {
     local model=$5
     local res_mode=$6
     local nepoch=${7:-60}
-    local syn_type=${8:-'None'}
-    local soft_power=${9:-'0.8'}
+    local syndata_key=${8:-'None'}
+    local gamma=${9:-'0.8'}
     local synthetic_prob=${10:-'0.1'}
+    local lr=${11:-'0.01'}
     
     lr=$(get_learning_rate $dataset $model $res_mode)
-    echo "train $dataset $model $res_mode $syn_type $soft_power $synthetic_prob $lr"
+    echo "train $dataset $model $res_mode $syndata_key $gamma $synthetic_prob $lr"
 
-    command="CUDA_VISIBLE_DEVICES=$gpu  python downstream_tasks/cls/train_hub.py -d $dataset -g $gpu -a 2 -n `date +%m%d%H%M` -p $group_name -ne $nepoch --res_mode $res_mode --optimizer $optimizer --model $model  -lr $lr -sp $soft_power --seed $seed --weight_decay 0.0005 --syn_p $synthetic_prob --examples_per_class $shot"
-    if [[ "${syn_type}" != 'None' ]]; then
-        command="$command --syn_type $syn_type"
+    command="CUDA_VISIBLE_DEVICES=$gpu  python downstream_tasks/cls/train_hub.py -d $dataset -g $gpu -a 2 -n `date +%m%d%H%M` -p $group_name -ne $nepoch --res_mode $res_mode --optimizer $optimizer --model $model  -lr $lr -sp $gamma --seed $seed --weight_decay 0.0005 --syn_p $synthetic_prob --examples_per_class $shot"
+    if [[ "${syndata_key}" != 'None' ]]; then
+        command="$command --syndata_key $syndata_key"
     fi
     eval "$command"
 }
 
-
-function main_cls_mixup {
-    local dataset=$1
-    local gpu=$2
-    local seed=$3
-    local model=$4
-    local res_mode=$5
-    local nepoch=${6:-150}
-    local syn_type=${7:-'None'}
-    local soft_power=${8:-'0.8'}
-    local synthetic_prob=${9:-'0.1'}
-    local mixup_probability=${10:-'0.3'}
-    local criterion=${10:-'ls'}
-    lr=$(get_learning_rate $dataset $model $res_mode)
-    echo "train_mixup $dataset $model $res_mode $syn_type $soft_power $synthetic_prob $lr"
-    command="CUDA_VISIBLE_DEVICES=$gpu  python downstream_tasks/cls/train_hub.py -d $dataset -g $gpu -a 2 -n `date +%m%d%H%M` -p $group_name -ne $nepoch --res_mode $res_mode --optimizer $optimizer --model $model  -lr $lr -sp $soft_power --seed $seed --weight_decay 0.0001 --use_mixup --criterion $criterion --mixup_probability $mixup_probability"
-    if [[ "${syn_type}" != 'None' ]]; then
-        command="$command --syn_type $syn_type"
-    fi
-    eval "$command"
-}
 
 function main_cls_cutmix {
     local dataset=$1
@@ -119,78 +95,71 @@ function main_cls_cutmix {
     local model=$4
     local res_mode=$5
     local nepoch=${6:-150}
-    local syn_type=${7:-'None'}
-    local soft_power=${8:-'0.8'}
+    local syndata_key=${7:-'None'}
+    local gamma=${8:-'0.8'}
     local synthetic_prob=${9:-'0.1'}
     local mixup_probability=${10:-'0.1'}
     local criterion=${10:-'ls'}
     lr=$(get_learning_rate $dataset $model $res_mode)
-    echo "train_cutmix $dataset $model $res_mode $syn_type $soft_power $synthetic_prob $lr"
-    command="CUDA_VISIBLE_DEVICES=$gpu  python downstream_tasks/cls/train_hub.py -d $dataset -g $gpu -a 2 -n `date +%m%d%H%M` -p $group_name -ne $nepoch --res_mode $res_mode --optimizer $optimizer --model $model  -lr $lr -sp $soft_power --seed $seed --weight_decay 0.0001 --use_cutmix --criterion $criterion --mixup_probability $mixup_probability"
-    if [[ "${syn_type}" != 'None' ]]; then
-        command="$command --syn_type $syn_type"
+    echo "train_cutmix $dataset $model $res_mode $syndata_key $gamma $synthetic_prob $lr"
+    command="CUDA_VISIBLE_DEVICES=$gpu  python downstream_tasks/cls/train_hub.py -d $dataset -g $gpu -a 2 -n `date +%m%d%H%M` -p $group_name -ne $nepoch --res_mode $res_mode --optimizer $optimizer --model $model  -lr $lr -sp $gamma --seed $seed --weight_decay 0.0001 --use_cutmix --criterion $criterion --mixup_probability $mixup_probability"
+    if [[ "${syndata_key}" != 'None' ]]; then
+        command="$command --syndata_key $syndata_key"
     fi
     eval "$command"
 }
 
-function main_cls_params {
-    local dataset=$1
-    local gpu=$2
-    local seed=$3
-    local model=$4
-    local finetune_strategy=$5
-    local nepoch=${6:-150}
-    local syn_type=${7:-'None'}
-    local soft_power=${8:-'0.8'}
-    local synthetic_prob=${9:-'0.1'}
-    local group_name=${10:-'main_result_params'}
-    lr=$(get_learning_rate $dataset $model $res_mode)
-    echo "train_params $dataset $model $res_mode $syn_type $soft_power $synthetic_prob $lr"
-    command="CUDA_VISIBLE_DEVICES=$gpu  python downstream_tasks/cls/train_hub.py -d $dataset -g $gpu  --finetune_strategy $finetune_strategy -a 2 -n `date +%m%d%H%M` -p $group_name -ne $nepoch --res_mode '224' --optimizer $optimizer --model $model  -lr $lr -sp $soft_power --seed $seed  --criterion 'ls' --mixup_probability 0.1"
-    syn_type_arg="--syn_type $syn_type --weight_decay 0.0005"
-    cutmix_arg=""
-    command="$command $([ "$syn_type" != 'None' ] && echo "$syn_type_arg" || echo "$cutmix_arg")"
+
+function main_cls_corrupt_combined {
+    local dataset='cub'
+    local res_mode='224'
+    local model='resnet50'
+    local nepoch=128
+    local lr=0.05    
+    local synthetic_prob=0.1
+    local gamma=0.8
+    local gpu=$1
+    local seed=$2
+    local syndata_key=$3
+    local corrupt_prob=$4
+    local use_cutmix=$5
+
+    command="CUDA_VISIBLE_DEVICES=$gpu  python downstream_tasks/cls/train_hub.py -d $dataset -g $gpu -a 2 -n `date +%m%d%H%M`$note -p $group_name -ne $nepoch --res_mode $res_mode --optimizer $optimizer --model $model  -lr $lr -sp $gamma --seed $seed --weight_decay 0.0005 --corrupt_prob $corrupt_prob --syn_p $synthetic_prob"
+
+    if [[ "${syndata_key}" != 'None' ]]; then
+        command="$command --syndata_key $syndata_key"
+    fi
+
+    if [ "$use_cutmix" == "true" ]; then
+        command="$command --use_cutmix"
+    fi
+
     eval "$command"
-
 }
 
-
-function im_cls {
+function main_cls_waterbird_combined {
+    local dataset='cub'
+    local res_mode='224'
+    local model='resnet50'
+    local nepoch=128
+    local lr=0.05    
+    local synthetic_prob=0.1
+    local gamma=0.8
     local gpu=$1
-    local datast=$2
-    local imb_factor=$3
-    local syn_type=${4:-'realmixup0.7_imb0.01'}
-    local synthetic_probability=${5:-0.3}
-    python downstream_tasks/imbalanced_cls/train_hub.py --dataset $datast    --loss_type CE --lr 0.005 --epochs 200 --imb_factor $imb_factor   -b 128  --gpu $gpu --data_aug vanilla   --root_log outputs/results_cmo --syn_type $syn_type --synthetic_probability $synthetic_probability;
-}
+    local seed=$2
+    local syndata_key=$3
+    local corrupt_prob=$4
+    local use_cutmix=$5
 
-function im_cls_weightedSyn {
-    local gpu=$1
-    local datast=$2
-    local imb_factor=$3
-    local syn_type=${4:-'realmixup0.7_imb0.01'}
-    local synthetic_probability=${5:-0.3}
-    local soft_power=${6:-0.5}
-    python downstream_tasks/imbalanced_cls/train_hub.py --dataset $datast    --loss_type CE --lr 0.005 --epochs 200 --imb_factor $imb_factor   -b 128  --gpu $gpu --data_aug vanilla   --root_log outputs/results_cmo --syn_type $syn_type --synthetic_probability $synthetic_probability --soft_power $soft_power --use_weighted_syn;
-}
+    command="CUDA_VISIBLE_DEVICES=$gpu  python downstream_tasks/cls/train_hub_waterbird.py -d $dataset -g $gpu -a 2 -n `date +%m%d%H%M`$note -p $group_name -ne $nepoch --res_mode $res_mode --optimizer $optimizer --model $model  -lr $lr -sp $gamma --seed $seed --weight_decay 0.0005 --corrupt_prob $corrupt_prob --syn_p $synthetic_prob"
 
-function im_cls_baseline {                             
-    local gpu=$1
-    local datast=$2
-    local imb_factor=$3
-    python downstream_tasks/imbalanced_cls/train_hub.py --dataset $datast    --loss_type CE --lr 0.005 --epochs 200 --imb_factor $imb_factor   -b 128  --gpu $gpu --data_aug vanilla   --root_log outputs/results_cmo ;
-}
+    if [[ "${syndata_key}" != 'None' ]]; then
+        command="$command --syndata_key $syndata_key"
+    fi
 
-function im_cls_cmo {
-    local gpu=$1
-    local datast=$2
-    local imb_factor=$3
-    python downstream_tasks/imbalanced_cls/train_hub.py --dataset $datast    --loss_type CE --lr 0.005 --epochs 200 --imb_factor $imb_factor   -b 128  --gpu $gpu --data_aug vanilla   --root_log outputs/results_cmo --data_aug CMO;
-}
+    if [ "$use_cutmix" == "true" ]; then
+        command="$command --use_cutmix"
+    fi
 
-function im_cls_drw {
-    local gpu=$1
-    local datast=$2
-    local imb_factor=$3
-    python downstream_tasks/imbalanced_cls/train_hub.py --dataset $datast    --loss_type CE --lr 0.005 --epochs 200 --imb_factor $imb_factor   -b 128  --gpu $gpu --data_aug vanilla   --root_log outputs/results_cmo --train_rule DRW;
+    eval "$command"
 }

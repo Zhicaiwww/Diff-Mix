@@ -299,8 +299,8 @@ class DreamboothLoraGeneration(GenerativeMixup):
             )
 
         canvas = []
-        for orig, out in zip(image, outputs.images):
-            canvas.append(out.resize(orig.size, Image.BILINEAR))
+        for out in outputs.images:
+            canvas.append(out)
         return canvas, label
 
 

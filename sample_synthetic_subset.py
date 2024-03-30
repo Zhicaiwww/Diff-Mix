@@ -41,7 +41,6 @@ def generate_meta_csv(output_path):
     for index, row in tqdm(df.iterrows(), total=len(df)):
         image_path = os.path.join(output_path,'data',row['Path'])
         try:
-            # 尝试加载图片
             img = Image.open(image_path)
             img.close()  
             valid_rows.append(row) 
@@ -84,15 +83,15 @@ def main(source_directory_list, target_directory, num_samples):
     for class_name, image_file in tqdm(zip(selected_image_class_names ,selected_image_files), desc='Copying data', total=num_samples):
         shutil.copy(image_file, os.path.join(target_directory, class_name))
 
-# python sample_synthetic_subset.py --num_samples 1000 --dataset cub --source_syn realgen --target_directory outputs/aug_samples_1shot/cub/real-generation-Multi5
-# python sample_synthetic_subset.py --num_samples 16670 --dataset aircraft --source_syn mixup0.5 mixup0.7 mixup0.9 --target_directory outputs/aug_samples/aircraft/dreambooth-lora-mixup-Uniform
+# python sample_synthetic_subset.py --num_samples 1000 --dataset cub --source_syn realgen --target_directory outputs/aug_samples_1shot/cub/real-gen-Multi5
+# python sample_synthetic_subset.py --num_samples 16670 --dataset aircraft --source_syn mixup0.5 mixup0.7 mixup0.9 --target_directory outputs/aug_samples/aircraft/diff-mix-Uniform
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--num_samples', type=int, default=40000)
     parser.add_argument('--dataset', type=str, default='cub')
     parser.add_argument('--source_syn', type=str, nargs='+', default='mixup')
-    parser.add_argument('--target_directory', type=str, default='outputs/aug_samples/cub/dreambooth-lora-mixup-Uniform')
+    parser.add_argument('--target_directory', type=str, default='outputs/aug_samples/cub/diff-mix-Uniform')
     
     args = parser.parse_args()
     source_directory_list = []

@@ -8,7 +8,7 @@ from utils import visualize_images
 from diffusers import StableDiffusionImg2ImgPipeline, StableDiffusionPipeline
 from semantic_aug.few_shot_dataset import SyntheticDataset
 from semantic_aug.augmentations.textual_inversion import load_embeddings
-from utils import DATASET_NAME_MAPPING, AUGMENT, parse_synthetic_dir
+from utils import DATASET_NAME_MAPPING, AUGMENT_METHODS, parse_synthetic_dir
 
 if __name__ == '__main__':
     device = 'cuda:1'

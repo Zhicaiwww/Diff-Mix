@@ -44,22 +44,22 @@ The simplified command for sampling a $5\times$ synthetic subset in an inter-cla
 ```bash
 source scripts/sample.sh
 export GPU_IDS=(0 0 0 1 1 1)
-bash sample 'cub' 'ti_db_latest' 'dreambooth-lora-mixup' 0.7
+bash sample 'cub' 'ti_db_latest' 'diff-mix' 0.7
 ```
-One can also attempt to construct the synthetic subset using other expansion strategies by replacing `dreambooth-lora-mixup` with `dreambooth-lora-augmentation` (Diff-Aug, fine-tuned intra-class translation method), `real-mixup` (Real-Mix, pre-trained inter-class translation method), `real-guidance` (Real-Aug, pre-trained intra-class translation method). 
+One can also attempt to construct the synthetic subset using other expansion strategies by replacing `diff-mix` with `diff-aug` (Diff-Aug, fine-tuned intra-class translation method), `real-mix` (Real-Mix, pre-trained inter-class translation method), `real-guidance` (Real-Aug, pre-trained intra-class translation method). 
 
 To sample a 5-shot setting, modify the shell command to:
 ```
 source scripts/sample.sh
 export GPU_IDS=(0 0 0 1 1 1)
-bash sample_fewshot 5 'cub' 'ti_db_latest' 'dreambooth-lora-mixup' 0.7 'fixed'
+bash sample_fewshot 5 'cub' '5shot_ti_db_latest' 'diff-mix' 0.7 
 ```
 The sampled subset will be cached at `outputs/aug_samples{_5shot}/cub`. After that, please manually add the meta-information of the subset into `synthetic_datasets.yaml` constructed with the form:
 
 ```yaml
 cub: 
-  diffmix_fixed_0.7: 'outputs/aug_samples/cub/dreambooth-lora-mixup-Multi7-ti_db35000-Strength0.7'
-  5shot_diffmix_fixed_0.7: 'outputs/aug_samples_5shot/cub/dreambooth-lora-mixup-Multi7-ti_db35000-Strength0.7'
+  diffmix_0.7: 'outputs/aug_samples/cub/diff-mix-Multi7-ti_db35000-Strength0.7'
+  5shot_diffmix_0.7: 'outputs/aug_samples_5shot/cub/diff-mix-Multi7-ti_db35000-Strength0.7'
 ```
 This allows you to locate the synthetic paths simply by using the key set ('cub', 'diffmix_fixed_0.7') in case there are multiple subsets.
 ### Downstream classification
@@ -67,9 +67,11 @@ After completing the sampling process, you can integrate the synthetic data into
 
 ```bash
 source scripts/classification.sh
-# main_cls {dataset_name} {gpu} {seed} {model} {resolution} {nepoch} {syn_type} {soft_power} {synthetic_prob}
-main_cls 'cub' '0' 2020 'resnet50' '224' 150 'diffmix_fixed_0.7' 0.5 0.1
+# main_cls {dataset_name} {gpu} {seed} {model} {resolution} {nepoch} {syndata_key} {gamma} {synthetic_prob}
+main_cls 'cub' '0' 2020 'resnet50' '224' 120 'diffmix_0.7' 0.5 0.1
 ```
+
+Running scripts 
 
 ## Acknowledgements
 

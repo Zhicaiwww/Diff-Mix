@@ -27,7 +27,7 @@ from semantic_aug.datasets.food import FoodHugDatasetForT2I, FoodHugDataset
 from semantic_aug.datasets.caltech101 import Caltech101DatasetForT2I, Caltech101Dataset
 from semantic_aug.datasets.pascal import PascalDatasetForT2I, PascalDataset
 from semantic_aug.datasets.dog import StanfordDogDatasetForT2I, StanfordDogDataset
-from semantic_aug.datasets.pathmnist import PathMNISTDatasetForT2I, PathMNISTDataset
+# from semantic_aug.datasets.pathmnist import PathMNISTDatasetForT2I, PathMNISTDataset
 
 from semantic_aug.augmentations.textual_inversion import TextualInversionMixup
 from semantic_aug.augmentations.dreabooth_lora import DreamboothLoraMixup, DreamboothLoraGeneration
@@ -44,7 +44,7 @@ T2I_DATASET_NAME_MAPPING = {
                     'caltech': Caltech101DatasetForT2I,
                     'pascal': PascalDatasetForT2I,
                     'dog': StanfordDogDatasetForT2I,
-                    'pathmnist': PathMNISTDatasetForT2I
+                    # 'pathmnist': PathMNISTDatasetForT2I
                 }
 
 DATASET_NAME_MAPPING = {
@@ -58,7 +58,7 @@ DATASET_NAME_MAPPING = {
     "caltech": Caltech101Dataset,
     "pascal": PascalDataset,
     "dog": StanfordDogDataset,
-    'pathmnist': PathMNISTDataset
+    # 'pathmnist': PathMNISTDataset
 }
 IMBALANCE_DATASET_NAME_MAPPING = {
     "cub": CUBBirdHugImbalanceDataset,
@@ -69,15 +69,15 @@ T2I_IMBALANCE_DATASET_NAME_MAPPING = {
     "flower": FlowersImbalanceDatasetForT2I,
 }
 
-AUGMENT = {
+AUGMENT_METHODS = {
     "textual-inversion-mixup": TextualInversionMixup,
     "textual-inversion-augmentation": TextualInversionMixup,
     "real-guidance": DreamboothLoraMixup,
-    "real-mixup": DreamboothLoraMixup,
+    "real-mix": DreamboothLoraMixup,
     "real-generation": RealGeneration,
-    "dreambooth-lora-mixup": DreamboothLoraMixup,
-    "dreambooth-lora-augmentation": DreamboothLoraMixup,
-    "dreambooth-lora-generation": DreamboothLoraGeneration,
+    "diff-mix": DreamboothLoraMixup,
+    "diff-aug": DreamboothLoraMixup,
+    "diff-gen": DreamboothLoraGeneration,
 }
 
 
@@ -206,8 +206,8 @@ def parse_synthetic_dir(dataset_name ,synthetic_type='mixup'):
         check_synthetic_dir_validity(synthetic_dir)
 
     elif isinstance(synthetic_type, list):
-        for syn_type in synthetic_type:
-            synthetic_dir = synthetic_meta[dataset_name][syn_type] 
+        for syndata_key in synthetic_type:
+            synthetic_dir = synthetic_meta[dataset_name][syndata_key] 
             check_synthetic_dir_validity(synthetic_dir)
     else:
         raise ValueError('synthetic_type should be str or list')
@@ -216,7 +216,7 @@ def parse_synthetic_dir(dataset_name ,synthetic_type='mixup'):
     return synthetic_dir
 
 def parse_finetuned_ckpt(dataset, finetune_model_key='db_ti_latest'):
-    with open('config/finetuned_ckpts.yaml', 'r') as file:
+    with open('/data/zhicai/code/Diff-Mix/config/finetuned_ckpts.yaml', 'r') as file:
         import yaml
         meta_data = yaml.safe_load(file)
     lora_path = meta_data[dataset][finetune_model_key]['lora_path'] 
@@ -239,9 +239,9 @@ def checked_has_run(exp_dir, args):
                 with open(config_file, 'r') as file:
                     saved_args = yaml.load(file, Loader=yaml.FullLoader)
                 
-                if current_args['syn_type'] is None or 'aug' in current_args['syn_type'] or 'gen' in current_args['syn_type']:
-                    current_args.pop('soft_power',None)
-                    saved_args.pop('soft_power', None)
+                if current_args['syndata_key'] is None or 'aug' in current_args['syndata_key'] or 'gen' in current_args['syndata_key']:
+                    current_args.pop('gamma',None)
+                    saved_args.pop('gamma', None)
                 saved_args.pop('gpu',  None)
                 saved_args.pop('note', None)
                 saved_args.pop('target_class_num',None)
@@ -256,16 +256,16 @@ def parse_result(target_dir, extra_column=[], postfix='_5shot'):
     for file in os.listdir(target_dir):
         config_file = os.path.join(target_dir,file,'config.yaml')
         config = yaml.safe_load(open(config_file,'r'))
-        if isinstance(config['syn_type'],list):
-            syn_type = config['syn_type'][0]
+        if isinstance(config['syndata_key'],list):
+            syndata_key = config['syndata_key'][0]
         else:
-            syn_type = config['syn_type']
+            syndata_key = config['syndata_key']
             
-        if syn_type is None:
+        if syndata_key is None:
             strategy='baseline'
             strength=0
         else:
-            match = re.match(r'([a-zA-Z]+)([0-9.]*).*', syn_type)
+            match = re.match(r'([a-zA-Z]+)([0-9.]*).*', syndata_key)
             if match:
                 strategy = match.group(1)
                 strength = match.group(2)
@@ -274,7 +274,7 @@ def parse_result(target_dir, extra_column=[], postfix='_5shot'):
         for basefile in os.listdir(os.path.join(target_dir,file)):
             if 'acc_eval' in basefile:
                 acc = float(basefile.split('_')[-1])
-                results.append((config['dir'],config['res_mode'],config['lr'], strategy, strength, config['soft_power'],config['seed'],*[str(config.pop(key, 'False')) for key in extra_column], acc ))
+                results.append((config['dir'],config['res_mode'],config['lr'], strategy, strength, config['gamma'],config['seed'],*[str(config.pop(key, 'False')) for key in extra_column], acc ))
                 break
 
     df = pd.DataFrame(results, columns=['dataset','resolution', 'lr','strategy', 'strength','soft power', 'seed', *extra_column, 'acc'])

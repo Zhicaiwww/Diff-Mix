@@ -1,22 +1,23 @@
 import sys
 import os
+import random
+import torch
 sys.path.append('/data/zhicai/code/Diff-Mix/')
 from semantic_aug.few_shot_dataset import FewShotDataset, HugFewShotDataset
 from semantic_aug.datasets.utils import IMAGENET_TEMPLATES_SMALL 
 from semantic_aug.generative_augmentation import GenerativeAugmentation
 from typing import Any, Tuple, Dict
+from torch.utils.data import Dataset
 
 import numpy as np
 import pandas as pd
 import torchvision.transforms as transforms
-import torch
-import random
 
 from PIL import Image
 from shutil import copyfile
 from PIL import Image, ImageDraw
 from collections import defaultdict
-from datasets import load_dataset
+from datasets import load_dataset, load_from_disk
 
 
 SUPER_CLASS_NAME = 'bird'
@@ -128,6 +129,7 @@ class CUBBirdHugDataset(HugFewShotDataset):
                  synthetic_dir: str = None,
                  image_size: int = 512,
                  crop_size: int = 448,
+                 corrupt_prob=0.0,
                  **kwargs):
 
         if split == 'train':
@@ -154,13 +156,19 @@ class CUBBirdHugDataset(HugFewShotDataset):
                 label_to_indices[key] = sampled_indices 
                 _all_indices.extend(sampled_indices)
             dataset = dataset.select(_all_indices)
+            
 
+            
         self.dataset = dataset
+        self.class_names = [name.replace('/',' ') for name in dataset.features['label'].names]
+        self.num_classes = len(self.class_names)
+        if corrupt_prob > 0:
+            print(f"corrupt_prob: {corrupt_prob}")
+            self.corrupt_labels(corrupt_prob)
         class2label = self.dataset.features['label']._str2int
         self.class2label = {k.replace('/',' '): v for k, v in class2label.items()}
         self.label2class = {v: k.replace('/',' ') for k, v in class2label.items()} 
-        self.class_names = [name.replace('/',' ') for name in dataset.features['label'].names]
-        self.num_classes = len(self.class_names)
+
         
         
         self.label_to_indices = defaultdict(list)
@@ -172,7 +180,19 @@ class CUBBirdHugDataset(HugFewShotDataset):
             synthetic_probability=synthetic_probability,
             return_onehot=return_onehot, soft_scaler=soft_scaler,
             synthetic_dir=synthetic_dir,image_size=image_size, crop_size=crop_size, **kwargs)    
+        
 
+    def corrupt_labels(self, corrupt_prob):
+        labels = np.array(self.dataset['label'])
+        np.random.seed(12345)
+        mask = np.random.rand(len(labels)) <= corrupt_prob
+        rnd_labels = np.random.choice(len(self.class_names), mask.sum())
+        labels[mask] = rnd_labels
+        # we need to explicitly cast the labels from npy.int64 to
+        # builtin int type, otherwise pytorch will fail...
+        labels = [int(x) for x in labels]
+        self.dataset = self.dataset.remove_columns("label").add_column("label", labels).cast(self.dataset.features)
+        
     def __len__(self):
         
         return len(self.dataset)
@@ -207,7 +227,7 @@ class CUBBirdHugDatasetForT2I(torch.utils.data.Dataset):
 
         super().__init__()    
 
-        dataset = load_from_disk(image_train_dir)
+        dataset = load_dataset(image_train_dir, split='train')
 
         random.seed(seed)
         np.random.seed(seed)
@@ -446,7 +466,74 @@ class CUBBirdHugImbalanceDatasetForT2I(CUBBirdHugDatasetForT2I):
         self.label_to_indices = label_to_indices
         cur_num = len(self.dataset)
         print(f'Dataset size filtered from {org_num} to {cur_num} with imbalance factor {imb_factor}' )
+
+    def get_cls_num_list(self):
+        cls_num_list = [len(self.label_to_indices[label]) for label in range(self.num_classes)]
+        return cls_num_list
+     
+    def weighted_prob(self):
+        cls_num_list = self.get_cls_num_list()
+        probabilities = [1 / (num + 1) for num in cls_num_list]
+        total_prob = sum(probabilities)
+        normalized_probabilities = [prob / total_prob for prob in probabilities]
+        print("\nUsing weighted probability ! \n")
+        return normalized_probabilities 
+
+    def get_weighted_sampler(self):
         
+        cls_num_list = self.get_cls_num_list()
+        print(cls_num_list)
+        cls_weight = 1.0 / (np.array(cls_num_list) ** self.weighted_alpha)
+        cls_weight = cls_weight / np.sum(cls_weight) * len(cls_num_list)
+        samples_weight = np.array([cls_weight[t['label']] for t in self.dataset])
+        samples_weight = torch.from_numpy(samples_weight)
+        samples_weight = samples_weight.double()
+        print("samples_weight", samples_weight)
+        sampler = torch.utils.data.WeightedRandomSampler(samples_weight, len(self.dataset), replacement=True)
+        return sampler  
+
+class WaterBird(Dataset):
+    def __init__(self, split=2, image_size=256,crop_size=224,return_onehot = False):
+        self.root_dir = '/data/zhicai/datasets/waterbird_complete95_forest2water2/'
+        dataframe = pd.read_csv(os.path.join(self.root_dir,'metadata.csv'))
+        dataframe = dataframe[dataframe['split']==split].reset_index()
+        self.labels = list(map(lambda x: int(x.split('.')[0]) -1, dataframe['img_filename']))
+        self.dataframe = dataframe
+        self.image_paths = dataframe['img_filename']
+        self.groups = dataframe.apply(lambda row: f"{row['y']}{row['place']}", axis=1).tolist()
+        self.return_onehot = return_onehot
+        self.num_classes = len(set(self.labels))
+        self.transform = transforms.Compose(
+            [   
+                transforms.Resize((image_size, image_size)),
+                transforms.CenterCrop((crop_size, crop_size)),
+                transforms.ToTensor(),
+                transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
+            ]
+        ) 
+
+    def __len__(self):
+        return len(self.dataframe)
+
+    def __getitem__(self, idx):
+
+        img_path = self.image_paths[idx]
+        # Load image
+        img = Image.open(os.path.join(self.root_dir, img_path)).convert('RGB')
+
+        label = self.labels[idx]
+        group = self.groups[idx]
+        if self.transform:
+            img = self.transform(img)
+        if self.return_onehot:
+            if isinstance(label, (int, np.int64)): label = onehot(self.num_classes, label)
+        return img, label, group
+    
 if __name__== '__main__':
-    ds = CUBBirdHugDataset()
+    ds = CUBBirdHugDataset(examples_per_class=5)
+    save_dir = '/data/zhicai/code/Diff-Mix/data/5shot'
+    import tqdm
+    for i in tqdm.tqdm(range(len(ds))):
+        image = ds.get_image_by_idx(i)
+        image.save(os.path.join(save_dir,f'{i}.png'))
     

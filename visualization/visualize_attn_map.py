@@ -13,7 +13,7 @@ from diffusers.models.attention import Attention
 from einops import rearrange
 from torch import einsum
 from diffusers import StableDiffusionPipeline, EulerAncestralDiscreteScheduler
-from utils import DATASET_NAME_MAPPING, T2I_DATASET_NAME_MAPPING, AUGMENT, parse_finetuned_ckpt
+from utils import DATASET_NAME_MAPPING, T2I_DATASET_NAME_MAPPING, AUGMENT_METHODS, parse_finetuned_ckpt
 
 class AttentionVisualizer:
     def __init__(self, model, hook_target_name):
@@ -147,7 +147,7 @@ def synthesize_images(model,
 
 if __name__ == '__main__':
     dataset_list = ['cub']
-    aug = 'dreambooth-lora-mixup' #'dreambooth-lora-augmentation/mixup" "real-mixup"
+    aug = 'diff-mix' #'diff-aug/mixup" "real-mix"
     finetune_model_key = 'db_latest'
     guidance_scale = 7
     prompt = "a photo of a {name}"
@@ -156,8 +156,8 @@ if __name__ == '__main__':
     
     for dataset in dataset_list:
         lora_path, embed_path = parse_finetuned_ckpt(dataset=dataset, finetune_model_key=finetune_model_key)
-        AUGMENT[aug].pipe=None
-        model = AUGMENT[aug](
+        AUGMENT_METHODS[aug].pipe=None
+        model = AUGMENT_METHODS[aug](
             embed_path=embed_path,
             lora_path=lora_path, 
             prompt=prompt, 

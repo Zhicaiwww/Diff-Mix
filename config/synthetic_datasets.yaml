@@ -33,7 +33,7 @@ aircraft:
   realmixup0.9_5shot: 'outputs/aug_samples_5shot/aircraft/real-mixup-Multi5-Strength0.9'
   realmixup1.0_5shot: 'outputs/aug_samples_5shot/aircraft/real-mixup-Multi5-Strength1.0'
   realgen_5shot: 'outputs/aug_samples_5shot/aircraft/real-generation-Multi5' 
-  gen_5shot: 'outputs/aug_samples_5shot/aircraft/dreambooth-lora-generation-Multi5_db_ti_latest_5shot'
+  gen_5shot: 'outputs/aug_samples_5shot/aircraft/diff-gen-Multi5_db_ti_latest_5shot'
 
 
   aug0.1: 'outputs/aug_samples/aircraft/dreambooth-lora-augmentation-Multi5-db_ti_latest_e100-Strength0.1'
@@ -61,7 +61,7 @@ aircraft:
   realmixup0.9: 'outputs/aug_samples/aircraft/real-mixup-Multi5-Strength0.9'
   realmixup1.0: 'outputs/aug_samples/aircraft/real-mixup-Multi5-Strength1.0'
   realgen: 'outputs/aug_samples/aircraft/real-generation-Multi5'
-  gen: 'outputs/aug_samples/aircraft/dreambooth-lora-generation-Multi5_db_ti_latest_e100'
+  gen: 'outputs/aug_samples/aircraft/diff-gen-Multi5_db_ti_latest_e100'
   
 
 
@@ -91,7 +91,7 @@ aircraft:
   realmixup0.9_1shot: 'outputs/aug_samples_1shot/aircraft/real-mixup-Multi5-Strength0.9'
   realmixup1.0_1shot: 'outputs/aug_samples_1shot/aircraft/real-mixup-Multi5-Strength1.0'
   realgen_1shot: 'outputs/aug_samples_1shot/aircraft/real-generation-Multi5' 
-  gen_1shot: 'outputs/aug_samples_1shot/aircraft/dreambooth-lora-generation-Multi5'
+  gen_1shot: 'outputs/aug_samples_1shot/aircraft/diff-gen-Multi5'
 
   aug0.1_10shot: 'outputs/aug_samples_10shot/aircraft/dreambooth-lora-augmentation-Multi5-db_ti_latest_10shot-Strength0.1'
   aug0.3_10shot: 'outputs/aug_samples_10shot/aircraft/dreambooth-lora-augmentation-Multi5-db_ti_latest_10shot-Strength0.3'
@@ -118,7 +118,7 @@ aircraft:
   realmixup0.9_10shot: 'outputs/aug_samples_10shot/aircraft/real-mixup-Multi5-Strength0.9'
   realmixup1.0_10shot: 'outputs/aug_samples_10shot/aircraft/real-mixup-Multi5-Strength1.0'
   realgen_10shot: 'outputs/aug_samples_10shot/aircraft/real-generation-Multi5' 
-  gen_10shot: 'outputs/aug_samples_10shot/aircraft/dreambooth-lora-generation-Multi5_db_ti_latest_10shot'
+  gen_10shot: 'outputs/aug_samples_10shot/aircraft/diff-gen-Multi5_db_ti_latest_10shot'
 
 caltech:
   aug0.1_5shot: 'outputs/aug_samples_5shot/caltech/dreambooth-lora-augmentation-Multi5-db_latest_5shot-Strength0.1'
@@ -146,7 +146,7 @@ caltech:
   realmixup0.9_5shot: 'outputs/aug_samples_5shot/caltech/real-mixup-Multi5-Strength0.9'
   realmixup1.0_5shot: 'outputs/aug_samples_5shot/caltech/real-mixup-Multi5-Strength1.0'
   realgen_5shot: 'outputs/aug_samples_5shot/caltech/real-generation-Multi5' 
-  gen_5shot: 'outputs/aug_samples_5shot/caltech/dreambooth-lora-generation-Multi5'
+  gen_5shot: 'outputs/aug_samples_5shot/caltech/diff-gen-Multi5'
 
 
 car:
@@ -190,6 +190,7 @@ cub:
   realaug0.7_imb0.01   : 'outputs/aug_samples_imbalance/0.01/cub/real-guidance-Multi10-Strength0.7'
   realaug0.7_imb0.05   : 'outputs/aug_samples_imbalance/0.05/cub/real-guidance-Multi10-Strength0.7'
   realaug0.7_imb0.1    : 'outputs/aug_samples_imbalance/0.1/cub/real-guidance-Multi10-Strength0.7'
+  aug0.7_imb0.01   : 'outputs/aug_samples_imbalance/cub/dreambooth-lora-augmentation-Multi10-db_ti_latest_imb_0.01-Strength0.7'
   mixup0.7_imb0.01   : 'outputs/aug_samples_imbalance/cub/dreambooth-lora-mixup-Multi10-db_ti_latest_imb_0.01-Strength0.7'
   mixup0.7_imb0.05   : 'outputs/aug_samples_imbalance/cub/dreambooth-lora-mixup-Multi10-db_ti_latest_imb_0.05-Strength0.7'
   mixup0.7_imb0.1   : 'outputs/aug_samples_imbalance/cub/dreambooth-lora-mixup-Multi10-db_ti_latest_imb_0.1-Strength0.7'
@@ -223,7 +224,7 @@ cub:
   realmixup0.9_10shot: 'outputs/aug_samples_10shot/cub/real-mixup-Multi5-Strength0.9'
   realmixup1.0_10shot: 'outputs/aug_samples_10shot/cub/real-mixup-Multi5-Strength1.0'
   realgen_10shot: 'outputs/aug_samples_10shot/cub/real-generation-Multi5' 
-  gen_10shot: 'outputs/aug_samples_10shot/cub/dreambooth-lora-generation-Multi5_db_ti_latest_10shot'
+  gen_10shot: 'outputs/aug_samples_10shot/cub/diff-gen-Multi5_db_ti_latest_10shot'
 
   aug1.0: 'outputs/aug_samples/cub/dreambooth-lora-augmentation-Multi7-db_ti35000-Strength1'
   aug0.9: 'outputs/aug_samples/cub/dreambooth-lora-augmentation-Multi7-db_ti35000-Strength0.9'
@@ -261,7 +262,7 @@ cub:
   realmixup0.7: 'outputs/aug_samples/cub/real-mixup-Multi7-Strength0.7'
   realmixup0.9: 'outputs/aug_samples/cub/real-mixup-Multi7-Strength0.9'
   realmixup1.0: 'outputs/aug_samples/cub/real-mixup-Multi7-Strength1.0'
-  gen: 'outputs/aug_samples/cub/dreambooth-lora-generation-Multi5_db_ti_latest'
+  gen: 'outputs/aug_samples/cub/diff-gen-Multi5_db_ti_latest'
 
   aug0.1_5shot: 'outputs/aug_samples_5shot/cub/dreambooth-lora-augmentation-Multi5-db_ti_latest_5shot-Strength0.1'
   aug0.3_5shot: 'outputs/aug_samples_5shot/cub/dreambooth-lora-augmentation-Multi5-db_ti_latest_5shot-Strength0.3'
@@ -288,7 +289,11 @@ cub:
   realmixup0.9_5shot: 'outputs/aug_samples_5shot/cub/real-mixup-Multi5-Strength0.9'
   realmixup1.0_5shot: 'outputs/aug_samples_5shot/cub/real-mixup-Multi5-Strength1.0'
   realgen_5shot: 'outputs/aug_samples_5shot/cub/real-generation-Multi5' 
-  gen_5shot: 'outputs/aug_samples_5shot/cub/dreambooth-lora-generation-Multi5_db_ti_latest_5shot'
+  gen_5shot: 'outputs/aug_samples_5shot/cub/diff-gen-Multi5_db_ti_latest_5shot'
+
+  db_35000_5shot: 'outputs/aug_samples_5shot/cub/dreambooth-lora-mixup-Multi5-db_35000_5shot-Strength0.7'
+  ti_35000_5shot: '/data/zhicai/code/Diff-Mix/outputs/aug_samples_5shot/cub/dreambooth-lora-mixup-Multi5-ti_35000_5shot-Strength0.7'
+  ti_db_35000_5shot: '/data/zhicai/code/Diff-Mix/outputs/aug_samples_5shot/cub/dreambooth-lora-mixup-Multi5-ti_db_35000_5shot-Strength0.7'
 
   aug0.1_1shot: 'outputs/aug_samples_1shot/cub/dreambooth-lora-augmentation-Multi5-db_ti_latest_1shot-Strength0.1'
   aug0.3_1shot: 'outputs/aug_samples_1shot/cub/dreambooth-lora-augmentation-Multi5-db_ti_latest_1shot-Strength0.3'
@@ -321,6 +326,9 @@ cub:
   mixup0.7_e100: 'outputs/aug_samples/cub/dreambooth-lora-mixup-Multi5-db_ti_latest_e100-Strength0.7'
   mixup0.9_e100: 'outputs/aug_samples/cub/dreambooth-lora-mixup-Multi5-db_ti_latest_e100-Strength0.9'
 
+  corrupt0.2_realmixup0.7: 'outputs/aug_samples_corrupt0.2/cub/real-guidance-Multi5-Strength0.7'
+  corrupt0.2_mixup0.7: 'outputs/aug_samples_corrupt0.2/cub/real-mixup-Multi5-Strength0.7'
+  # corrupt_realmixup0.7:
 chest:
   mixup0.5: 'outputs/aug_samples/chest/dreambooth-lora-mixup-Multi5-db_ti_latest-Strength0.5'
   mixup0.7: 'outputs/aug_samples/chest/dreambooth-lora-mixup-Multi5-db_ti_latest-Strength0.7'
@@ -350,7 +358,7 @@ chest:
   realmixup0.9_5shot: 'outputs/aug_samples_5shot/chest/real-mixup-Multi5-Strength0.9'
   realmixup1.0_5shot: 'outputs/aug_samples_5shot/chest/real-mixup-Multi5-Strength1.0'
   realgen_5shot: 'outputs/aug_samples_5shot/chest/real-generation-Multi5' 
-  gen_5shot:     'outputs/aug_samples_5shot/chest/dreambooth-lora-generation-Multi5'
+  gen_5shot:     'outputs/aug_samples_5shot/chest/diff-gen-Multi5'
 
 
 dog:
@@ -391,7 +399,7 @@ dog:
   realmixup0.9_5shot: 'outputs/aug_samples_5shot/dog/real-mixup-Multi5-Strength0.9'
   realmixup1.0_5shot: 'outputs/aug_samples_5shot/dog/real-mixup-Multi5-Strength1.0'
   realgen_5shot: 'outputs/aug_samples_5shot/dog/real-generation-Multi5' 
-  gen_5shot:     'outputs/aug_samples_5shot/dog/dreambooth-lora-generation-Multi5'
+  gen_5shot:     'outputs/aug_samples_5shot/dog/diff-gen-Multi5'
 
   aug0.1_fullshot: 'outputs/aug_samples/dog/dreambooth-lora-augmentation-Multi3-db_ti_latest_e100-Strength0.1'
   aug0.3_fullshot: 'outputs/aug_samples/dog/dreambooth-lora-augmentation-Multi3-db_ti_latest_e100-Strength0.3'
@@ -418,7 +426,7 @@ dog:
   realmixup0.9_fullshot: 'outputs/aug_samples/dog/real-mixup-Multi3-Strength0.9'
   realmixup1.0_fullshot: 'outputs/aug_samples/dog/real-mixup-Multi3-Strength1.0'
   realgen_fullshot: 'outputs/aug_samples/dog/real-generation-Multi5' 
-  gen_fullshot:     'outputs/aug_samples/dog/dreambooth-lora-generation-Multi5'
+  gen_fullshot:     'outputs/aug_samples/dog/diff-gen-Multi5'
 
 
 pascal:
@@ -447,7 +455,7 @@ pascal:
   realmixup0.9_5shot: 'outputs/aug_samples_5shot/pascal/real-mixup-Multi5-Strength0.9'
   realmixup1.0_5shot: 'outputs/aug_samples_5shot/pascal/real-mixup-Multi5-Strength1.0'
   realgen_5shot: 'outputs/aug_samples_5shot/pascal/real-generation-Multi5' 
-  gen_5shot: 'outputs/aug_samples_5shot/pascal/dreambooth-lora-generation-Multi5'
+  gen_5shot: 'outputs/aug_samples_5shot/pascal/diff-gen-Multi5'
 
 
 
@@ -475,7 +483,7 @@ pascal:
   realmixup0.7: 'outputs/aug_samples/pascal/real-mixup-Multi5-Strength0.7'
   realmixup0.9: 'outputs/aug_samples/pascal/real-mixup-Multi5-Strength0.9'
   realmixup1.0: 'outputs/aug_samples/pascal/real-mixup-Multi5-Strength1.0'
-  gen: 'outputs/aug_samples/pascal/dreambooth-lora-generation-Multi5_db_latest'
+  gen: 'outputs/aug_samples/pascal/diff-gen-Multi5_db_latest'
   realgen: 'outputs/aug_samples/pascal/real-generation-Multi5'
 
 flower: 
@@ -524,7 +532,7 @@ flower:
   realmixup0.9_5shot: 'outputs/aug_samples_5shot/flower/real-mixup-Multi5-Strength0.9'
   realmixup1.0_5shot: 'outputs/aug_samples_5shot/flower/real-mixup-Multi5-Strength1.0'
   realgen_5shot: 'outputs/aug_samples_5shot/flower/real-generation-Multi5' 
-  gen_5shot: 'outputs/aug_samples_5shot/flower/dreambooth-lora-generation-Multi5'
+  gen_5shot: 'outputs/aug_samples_5shot/flower/diff-gen-Multi5'
 
 
   aug0.1_10shot: 'outputs/aug_samples_10shot/flower/dreambooth-lora-augmentation-Multi5-db_ti_latest_10shot-Strength0.1'
@@ -552,7 +560,7 @@ flower:
   realmixup0.9_10shot: 'outputs/aug_samples_10shot/flower/real-mixup-Multi5-Strength0.9'
   realmixup1.0_10shot: 'outputs/aug_samples_10shot/flower/real-mixup-Multi5-Strength1.0'
   realgen_10shot: 'outputs/aug_samples_10shot/flower/real-generation-Multi5' 
-  gen_10shot: 'outputs/aug_samples_10shot/flower/dreambooth-lora-generation-Multi5'
+  gen_10shot: 'outputs/aug_samples_10shot/flower/diff-gen-Multi5'
 
   aug0.1_1shot: 'outputs/aug_samples_1shot/flower/dreambooth-lora-augmentation-Multi5-db_ti_latest_1shot-Strength0.1'
   aug0.3_1shot: 'outputs/aug_samples_1shot/flower/dreambooth-lora-augmentation-Multi5-db_ti_latest_1shot-Strength0.3'
@@ -579,7 +587,7 @@ flower:
   realmixup0.9_1shot: 'outputs/aug_samples_1shot/flower/real-mixup-Multi5-Strength0.9'
   realmixup1.0_1shot: 'outputs/aug_samples_1shot/flower/real-mixup-Multi5-Strength1.0'
   realgen_1shot: 'outputs/aug_samples_1shot/flower/real-generation-Multi5' 
-  gen_1shot: 'outputs/aug_samples_1shot/flower/dreambooth-lora-generation-Multi5'
+  gen_1shot: 'outputs/aug_samples_1shot/flower/diff-gen-Multi5'
 
 pet:
   mixup:        'outputs/aug_samples/pet/dreambooth-lora-mixup-Multi7-db_ti5000-Beta5'

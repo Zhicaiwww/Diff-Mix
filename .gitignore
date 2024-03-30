@@ -3,10 +3,12 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+debug/
 src/
 Diff-Mix/
 notebook/
 _others/
+pyrightconfig.json
 # images
 *.png
 *.jpg

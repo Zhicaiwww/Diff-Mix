@@ -13,7 +13,7 @@ import math
 sys.path.append('/data/zhicai/code/Diff-Mix/')
 os.environ['CURL_CA_BUNDLE'] = ''
 
-from utils import DATASET_NAME_MAPPING,IMBALANCE_DATASET_NAME_MAPPING, AUGMENT, parse_finetuned_ckpt
+from utils import DATASET_NAME_MAPPING,IMBALANCE_DATASET_NAME_MAPPING, AUGMENT_METHODS, parse_finetuned_ckpt
 from tqdm import tqdm
 from PIL import Image
 from itertools import product
@@ -24,28 +24,28 @@ from queue import Empty
 
 
 def check_args_videlity(args):
-
-    lora_path, embed_path = parse_finetuned_ckpt(args.dataset, args.finetune_model_key)
         
-    if args.aug_strategy == 'real-generation':
+    if args.sample_strategy == 'real-gen':
         args.lora_path = None
         args.embed_path = None
         args.aug_strength = 1
-        output_name = f'{args.aug_strategy}-Multi{args.syn_dataset_mulitiplier}'
-    elif args.aug_strategy == 'dreambooth-lora-generation':
+        output_name = f'{args.sample_strategy}-Multi{args.syn_dataset_mulitiplier}'
+    elif args.sample_strategy == 'diff-gen':
+        lora_path, embed_path = parse_finetuned_ckpt(args.dataset, args.finetune_model_key)
         args.lora_path = lora_path
         args.embed_path = embed_path 
-        output_name = f'{args.aug_strategy}-Multi{args.syn_dataset_mulitiplier}_{args.finetune_model_key}'
+        output_name = f'{args.sample_strategy}-Multi{args.syn_dataset_mulitiplier}_{args.finetune_model_key}'
         args.aug_strength = 1
     else:
-        if args.aug_strategy in ['real-guidance','real-mixup']:
+        if args.sample_strategy in ['real-guidance','real-mix']:
             args.lora_path = None
             args.embed_path = None
-            output_name = f'{args.aug_strategy}-Multi{args.syn_dataset_mulitiplier}'
+            output_name = f'{args.sample_strategy}-Multi{args.syn_dataset_mulitiplier}'
         else:
+            lora_path, embed_path = parse_finetuned_ckpt(args.dataset, args.finetune_model_key)
             args.lora_path = lora_path 
             args.embed_path = embed_path 
-            output_name = f'{args.aug_strategy}-Multi{args.syn_dataset_mulitiplier}-{args.finetune_model_key}'
+            output_name = f'{args.sample_strategy}-Multi{args.syn_dataset_mulitiplier}-{args.finetune_model_key}'
 
         if args.mask:
             output_name += '-Mask'
@@ -64,7 +64,6 @@ def beta_sampling(num_samples, beta=5):
     if num_samples < 1:
         raise ValueError("Number of samples must be greater than or equal to 1")
     # beta distribution with alpha = 1, beta = 1, clamp between 0.1 to 0.9
-# Define the desired range
     min_value = 0.1
     max_value = 0.9
 
@@ -75,7 +74,7 @@ def beta_sampling(num_samples, beta=5):
  
 def generate_translations(args, in_queue, out_queue, gpu_id, process_id):
     # print(f'seed: {args.seed + process_id}')
-    set_proxy()
+
     os.environ['CURL_CA_BUNDLE'] = ''
     
     random.seed(args.seed + process_id)
@@ -84,8 +83,8 @@ def generate_translations(args, in_queue, out_queue, gpu_id, process_id):
     if args.task == 'imbalanced':
         train_dataset = IMBALANCE_DATASET_NAME_MAPPING[args.dataset](split="train", seed=args.seed, resolution=args.resolution, imbalance_factor=args.imbalance_factor)
     else:
-        train_dataset = DATASET_NAME_MAPPING[args.dataset](split="train", seed=args.seed, examples_per_class=args.examples_per_class, resolution=args.resolution)
-    model = AUGMENT[args.aug_strategy](
+        train_dataset = DATASET_NAME_MAPPING[args.dataset](split="train", seed=args.seed, examples_per_class=args.examples_per_class, resolution=args.resolution, corrupt_prob=args.corrupt_prob)
+    model = AUGMENT_METHODS[args.sample_strategy](
     model_path = args.model_path,
     embed_path=args.embed_path,
     lora_path=args.lora_path, 
@@ -166,14 +165,14 @@ def main(args):
 
     num_tasks = args.syn_dataset_mulitiplier * len(train_dataset)
 
-    if args.aug_strategy in ['real-generation','real-guidance', 'dreambooth-lora-augmentation','dreambooth-lora-generation', 'textual-inversion-augmentation']:
+    if args.sample_strategy in ['real-gen','real-guidance', 'diff-aug','diff-gen', 'textual-inversion-augmentation']:
         source_classes = random.choices(range(len(train_dataset.class_names)), k=num_tasks)
         target_classes = source_classes
-    elif args.aug_strategy in ['real-mixup', 'dreambooth-lora-mixup', 'textual-inversion-mixup']:
+    elif args.sample_strategy in ['real-mix', 'diff-mix', 'textual-inversion-mixup']:
         source_classes = random.choices(range(len(train_dataset.class_names)), k=num_tasks)
         target_classes = random.choices(range(len(train_dataset.class_names)), k=num_tasks)
     else:
-        raise ValueError(f"Augmentation strategy {args.aug_strategy} not supported")
+        raise ValueError(f"Augmentation strategy {args.sample_strategy} not supported")
 
     if args.strength_strategy == 'fixed':
         strength_list = [args.aug_strength] * num_tasks
@@ -219,14 +218,12 @@ def main(args):
             current_queue_size = in_queue.qsize()
             pbar.n = total_tasks - current_queue_size
             pbar.refresh()
-            time.sleep(1)  # 可以调整刷新频率
+            time.sleep(1)  
 
-        # 等待所有进程完成
         for process in processes:
             process.join()
 
     rootdir = os.path.join(args.output_path,'data')
-    # 正则表达式模式来匹配路径中的各个部分
     pattern_level_1 = r"(.+)"
     pattern_level_2 = r"(.+)-(\d+)-(.+).png"
 
@@ -255,12 +252,10 @@ def main(args):
     for index, row in tqdm(df.iterrows(), total=len(df)):
         image_path = os.path.join(args.output_path,'data',row['Path'])
         try:
-            # 尝试加载图片
             img = Image.open(image_path)
             img.close()  
-            valid_rows.append(row)  # 如果成功加载图片，则保留该行
+            valid_rows.append(row)
         except Exception as e:
-            # 如果加载图片时出错，删除该图片文件
             os.remove(image_path)
             print(f"Deleted {image_path} due to error: {str(e)}")
 
@@ -282,8 +277,8 @@ if __name__ == "__main__":
     parser.add_argument("--resolution", type=int, default=512)
     parser.add_argument("--batch_size", type=int, default=1)
     parser.add_argument("--prompt", type=str, default="a photo of a {name}")
-    parser.add_argument("--aug_strategy", type=str, default="textual-inversion-mixup", 
-                        choices=["real-generation","real-guidance","real-mixup", "textual-inversion-augmentation" ,"textual-inversion-mixup", "dreambooth-lora-augmentation","dreambooth-lora-mixup","dreambooth-lora-generation"])
+    parser.add_argument("--sample_strategy", type=str, default="textual-inversion-mixup", 
+                        choices=["real-gen","real-guidance","real-mix", "textual-inversion-augmentation" ,"textual-inversion-mixup", "diff-aug","diff-mix","diff-gen"])
     parser.add_argument("--guidance-scale", type=float, default=7.5)
     parser.add_argument("--mask", type=int, default=0, choices=[0, 1])
     parser.add_argument("--inverted", type=int, default=0, choices=[0, 1])
@@ -295,9 +290,11 @@ if __name__ == "__main__":
     parser.add_argument("--syn_dataset_mulitiplier", type = int, default = 5, help = "multiplier for the number of synthetic images compared to the number of real images")
 
     parser.add_argument("--strength_strategy", type=str, default='fixed', choices=['fixed','beta','uniform'])
-    parser.add_argument("--finetune_model_key", type=str, default=None)
+    parser.add_argument("--finetune_model_key", type=str, default='')
     parser.add_argument("--beta_strength", type = int, default = None)
     parser.add_argument("--aug_strength", type = float, default = None)
+    parser.add_argument("--corrupt_prob", type = float, default = 0)
+
     args = parser.parse_args()
 
     # Please check the corresponding ckpt path before sampling !!! 

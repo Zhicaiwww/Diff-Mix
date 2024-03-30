@@ -694,13 +694,25 @@ def main():
         return {"pixel_values": pixel_values, "input_ids": input_ids}
 
     # DataLoaders creation:
-    train_dataloader = torch.utils.data.DataLoader(
-        train_dataset,
-        shuffle=True,
-        collate_fn=collate_fn,
-        batch_size=args.train_batch_size,
-        num_workers=args.dataloader_num_workers,
-    )
+    if  args.task == 'imbalanced':
+        train_dataloader = torch.utils.data.DataLoader(
+            train_dataset,
+            shuffle=True,
+            collate_fn=collate_fn,
+            batch_size=args.train_batch_size,
+            num_workers=args.dataloader_num_workers,
+        )
+    else:
+        train_sampler = train_dataset.get_weighted_sampler()
+        train_dataloader = torch.utils.data.DataLoader(
+            train_dataset,
+            shuffle=True,
+            collate_fn=collate_fn,
+            batch_size=args.train_batch_size,
+            num_workers=args.dataloader_num_workers,
+            sampler=train_sampler
+        )
+
 
     # Scheduler and math around the number of training steps.
 

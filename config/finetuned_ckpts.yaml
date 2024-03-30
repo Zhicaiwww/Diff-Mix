@@ -3,7 +3,22 @@ cub:
     model_path: "runwayml/stable-diffusion-v1-5"
     lora_path: "/data/zhicai/code/Diff-Mix/outputs/finetune_model/finetune_db/sd-cub-model-lora-rank10/pytorch_lora_weights.safetensors"
     embed_path: null
-  
+
+  db_35000_5shot:
+    model_path: "runwayml/stable-diffusion-v1-5"
+    lora_path: "/data/zhicai/code/Diff-Mix/outputs/finetune_model/finetune_db_5shot/sd-cub-model-lora-rank10/pytorch_lora_weights.safetensors"
+    embed_path: null
+
+  ti_35000_5shot:
+    model_path: "runwayml/stable-diffusion-v1-5"
+    lora_path: null
+    embed_path: "/data/zhicai/code/Diff-Mix/outputs/finetune_model/finetune_ti_5shot/sd-cub-model-lora-rank10/learned_embeds-steps-last.bin"
+
+  ti_db_35000_5shot:
+    model_path: "runwayml/stable-diffusion-v1-5"
+    lora_path: "/data/zhicai/code/Diff-Mix/outputs/finetune_model/finetune_ti_db_5shot/sd-cub-model-lora-rank10/pytorch_lora_weights.safetensors"
+    embed_path: "/data/zhicai/code/Diff-Mix/outputs/finetune_model/finetune_ti_db_5shot/sd-cub-model-lora-rank10/learned_embeds-steps-last.bin"
+
   ti_latest:
     model_path: "runwayml/stable-diffusion-v1-5"
     lora_path: null
