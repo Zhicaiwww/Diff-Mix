@@ -695,6 +695,7 @@ def main():
 
     # DataLoaders creation:
     if  args.task == 'imbalanced':
+        train_sampler = train_dataset.get_weighted_sampler()
         train_dataloader = torch.utils.data.DataLoader(
             train_dataset,
             shuffle=True,
@@ -703,7 +704,6 @@ def main():
             num_workers=args.dataloader_num_workers,
         )
     else:
-        train_sampler = train_dataset.get_weighted_sampler()
         train_dataloader = torch.utils.data.DataLoader(
             train_dataset,
             shuffle=True,
