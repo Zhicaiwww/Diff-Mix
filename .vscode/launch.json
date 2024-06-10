@@ -14,17 +14,32 @@
             "justMyCode": true,
             "args": [ "image_classification.py"]
         },
-        // {
-        //     "name": "fine-tune-with-lora",
-        //     "type": "python",
-        //     "request": "launch",
-        //     "program": "fine_tune.py",
-        //     "console": "integratedTerminal",
-        //     "justMyCode": false,
-        //     "args":["--dataset=pascal","--output_dir=./","--pretrained_model_name_or_path=CompVis/stable-diffusion-v1-4","--resolution=512","--train_batch_size=4","--lr_warmup_steps=0","--gradient_accumulation_steps=1","--max_train_steps=1000","--learning_rate=5.0e-04","--scale_lr","--lr_scheduler=constant","--mixed_precision=fp16","--revision=fp16","--gradient_checkpointing","--only_save_embeds","--num-trials","8","--examples-per-class","-1"],
-        //     "env": {
-        //         "CUDA_VISIBLE_DEVICES": "7"
-        //     }
-        // },
+        {
+            "name": "Python: Finetune Script",
+            "type": "python",
+            "request": "launch",
+            "module": "accelerate.commands.launch",
+            "console": "integratedTerminal",
+            "env":{"CUDA_VISIBLE_DEVICES": "1,2"},
+            "args": [
+                "train_text_to_image_ti_lora_diffmix.py",
+                "--pretrained_model_name_or_path=runwayml/stable-diffusion-v1-5",
+                "--dataset_name=cub", // 请替换为实际的数据集名称
+                "--caption_column=text",
+                "--resolution=512", // 请替换为实际的分辨率
+                "--random_flip",
+                "--max_train_steps=35000",
+                "--num_train_epochs=10", // 请替换为实际的训练周期
+                "--checkpointing_steps=5000",
+                "--learning_rate=5e-05",
+                "--lr_scheduler=constant",
+                "--lr_warmup_steps=0",
+                "--seed=42",
+                "--rank=10",
+                "--local_files_only",
+                "--examples_per_class=-1",
+                "--train_batch_size=2",
+                "--output_dir=/data/zhicai/code/Diff-Mix/outputs/finetune_model/finetune_ti_db/sd-your_dataset_name-model-lora-rank10", // 请替换为实际的输出目录
+                "--report_to=tensorboard"
     ]
 }

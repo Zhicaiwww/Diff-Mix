@@ -66,7 +66,7 @@ synthetic_prob=0.3
 finetune_model_key="ti_db_latest_imb${imb_factor}"
 syndata_key='diff-mix_0.7'
 sample_strategy='diff-mix'
-export CUDA_VISIBLE_DEVICES='4,5,6,7'
+export CUDA_VISIBLE_DEVICES='1,2'
 GPU_IDS=(0 0 0 1 1 1 2 2 2 3 3 3)
 gpu=0
 finetune_ti_db_imbalanced   'cub' $imb_factor;

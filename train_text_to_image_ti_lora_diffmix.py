@@ -91,7 +91,7 @@ def parse_args():
     parser.add_argument(
         "--pretrained_model_name_or_path",
         type=str,
-        default=None,
+        default="runwayml/stable-diffusion-v1-5",
         required=True,
         help="Path to pretrained model or model identifier from huggingface.co/models.",
     )
@@ -105,7 +105,7 @@ def parse_args():
     parser.add_argument(
         "--dataset_name",
         type=str,
-        default=None,
+        default='cub',
         help=(
             "The name of the Dataset (from the HuggingFace hub) to train on (could be your own, possibly private,"
             " dataset). It can also be a path pointing to a local copy of a dataset in your filesystem,"
@@ -702,6 +702,7 @@ def main():
             collate_fn=collate_fn,
             batch_size=args.train_batch_size,
             num_workers=args.dataloader_num_workers,
+            sampler=train_sampler
         )
     else:
         train_dataloader = torch.utils.data.DataLoader(
@@ -710,7 +711,6 @@ def main():
             collate_fn=collate_fn,
             batch_size=args.train_batch_size,
             num_workers=args.dataloader_num_workers,
-            sampler=train_sampler
         )
 
 
