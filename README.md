@@ -7,7 +7,7 @@
   </p>
   
 <div align="center">
-  <embed src="assets/teaser.pdf" alt="Image" width="400" height="300"/>
+  <img src="assets/teaser.png" alt="Image" width="600" height="500"/>
 </div>
 
 ## Introduction 👋
