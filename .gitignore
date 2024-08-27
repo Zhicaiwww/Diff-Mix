@@ -5,8 +5,10 @@ __pycache__/
 
 debug/
 src/
-Diff-Mix/
 notebook/
+figures/
+ckpts/*
+aug_samples/*
 _others/
 pyrightconfig.json
 # images

@@ -1,19 +1,19 @@
-import random
-import copy
 import math
-import torch
-import torch
 import os
-import torch.nn as nn
-import numpy as np
-import torch.nn.functional as F
-import matplotlib.pyplot as plt
+import random
 from collections import defaultdict
+
+import matplotlib.pyplot as plt
+import torch
+
 from diffusers.models.attention import Attention
-from einops import rearrange
-from torch import einsum
-from diffusers import StableDiffusionPipeline, EulerAncestralDiscreteScheduler
-from utils import DATASET_NAME_MAPPING, T2I_DATASET_NAME_MAPPING, AUGMENT_METHODS, parse_finetuned_ckpt
+from utils.utils import (
+    AUGMENT_METHODS,
+    DATASET_NAME_MAPPING,
+    T2I_DATASET_NAME_MAPPING,
+    finetuned_ckpt_dir,
+)
+
 
 class AttentionVisualizer:
     def __init__(self, model, hook_target_name):
@@ -27,23 +27,35 @@ class AttentionVisualizer:
             scale = 1.0
             with torch.no_grad():
                 hidden_states = input[0]
-                encoder_hidden_states = kwargs['encoder_hidden_states']
-                attention_mask = kwargs['attention_mask']
+                encoder_hidden_states = kwargs["encoder_hidden_states"]
+                attention_mask = kwargs["attention_mask"]
                 batch_size, sequence_length, _ = (
-                    hidden_states.shape if encoder_hidden_states is None else encoder_hidden_states.shape
+                    hidden_states.shape
+                    if encoder_hidden_states is None
+                    else encoder_hidden_states.shape
                 )
-                attention_mask=unet.prepare_attention_mask(attention_mask, sequence_length, batch_size)                
-                if hasattr(unet, 'preocessor'):
-                    query = unet.to_q(hidden_states) + scale * unet.processor.to_q_lora(hidden_states)
+                attention_mask = unet.prepare_attention_mask(
+                    attention_mask, sequence_length, batch_size
+                )
+                if hasattr(unet, "preocessor"):
+                    query = unet.to_q(hidden_states) + scale * unet.processor.to_q_lora(
+                        hidden_states
+                    )
                     query = unet.head_to_batch_dim(query)
 
                     if encoder_hidden_states is None:
                         encoder_hidden_states = hidden_states
                     elif unet.norm_cross:
-                        encoder_hidden_states = unet.norm_encoder_hidden_states(encoder_hidden_states)
+                        encoder_hidden_states = unet.norm_encoder_hidden_states(
+                            encoder_hidden_states
+                        )
 
-                    key = unet.to_k(encoder_hidden_states) + scale * unet.processor.to_k_lora(encoder_hidden_states)
-                    value = unet.to_v(encoder_hidden_states) + scale * unet.processor.to_v_lora(encoder_hidden_states)
+                    key = unet.to_k(
+                        encoder_hidden_states
+                    ) + scale * unet.processor.to_k_lora(encoder_hidden_states)
+                    value = unet.to_v(
+                        encoder_hidden_states
+                    ) + scale * unet.processor.to_v_lora(encoder_hidden_states)
                 else:
                     query = unet.to_q(hidden_states)
                     query = unet.head_to_batch_dim(query)
@@ -51,11 +63,12 @@ class AttentionVisualizer:
                     if encoder_hidden_states is None:
                         encoder_hidden_states = hidden_states
                     elif unet.norm_cross:
-                        encoder_hidden_states = unet.norm_encoder_hidden_states(encoder_hidden_states)
+                        encoder_hidden_states = unet.norm_encoder_hidden_states(
+                            encoder_hidden_states
+                        )
 
                     key = unet.to_k(encoder_hidden_states)
                     value = unet.to_v(encoder_hidden_states)
-                    
 
                 key = unet.head_to_batch_dim(key)
                 value = unet.head_to_batch_dim(value)
@@ -72,7 +85,9 @@ class AttentionVisualizer:
             if self.hook_target_name is not None:
                 if self.hook_target_name == name:
                     print("Added hook to", name)
-                    hook = module.register_forward_hook(self.get_attn_softmax(name), with_kwargs=True)
+                    hook = module.register_forward_hook(
+                        self.get_attn_softmax(name), with_kwargs=True
+                    )
                     self.hooks.append(hook)
         return self
 
@@ -81,7 +96,7 @@ class AttentionVisualizer:
             hook.remove()
 
 
-def plot_attn_map(attn_map, path='figures/attn_map/'):
+def plot_attn_map(attn_map, path="figures/attn_map/"):
     # Ensure the output directory exists
     os.makedirs(path, exist_ok=True)
 
@@ -106,25 +121,28 @@ def plot_attn_map(attn_map, path='figures/attn_map/'):
         for j in range(10):
             attn_slice = cond_attn_map[:, :, j].unsqueeze(-1).cpu().numpy()
             ax[j].imshow(attn_slice)
-            ax[j].axis('off')
+            ax[j].axis("off")
 
         # Save the plot
-        save_path = os.path.join(path, f'attn_map_{i:03d}.jpg')
+        save_path = os.path.join(path, f"attn_map_{i:03d}.jpg")
         plt.tight_layout()
         plt.savefig(save_path)
         plt.close(fig)
 
         print(f"Saved attention map at: {save_path}")
 
-def synthesize_images(model,
-                      strength,
-                      dataset='cub',
-                      finetune_model_key='db_ti_latest',
-                      source_label=1,
-                      target_label=2, 
-                      source_image=None,
-                      seed=0,
-                      hook_target_name: str = 'up_blocks.2.attentions.1.transformer_blocks.0.attn2'):
+
+def synthesize_images(
+    model,
+    strength,
+    dataset="cub",
+    finetuned_ckpt="db_ti_latest",
+    source_label=1,
+    target_label=2,
+    source_image=None,
+    seed=0,
+    hook_target_name: str = "up_blocks.2.attentions.1.transformer_blocks.0.attn2",
+):
 
     random.seed(seed)
     train_dataset = DATASET_NAME_MAPPING[dataset](split="train")
@@ -136,34 +154,46 @@ def synthesize_images(model,
         source_image = train_dataset.get_image_by_idx(source_indice)
     target_metadata = train_dataset.get_metadata_by_idx(target_indice)
     with AttentionVisualizer(model, hook_target_name) as visualizer:
-        image, _ = model(image=[source_image], label=target_label, strength=strength, metadata=target_metadata)
-        attn_map = visualizer.activation[hook_target_name]
-        path = os.path.join(
-            'figures/attn_map/', dataset, finetune_model_key
+        image, _ = model(
+            image=[source_image],
+            label=target_label,
+            strength=strength,
+            metadata=target_metadata,
         )
+        attn_map = visualizer.activation[hook_target_name]
+        path = os.path.join("figures/attn_map/", dataset, finetuned_ckpt)
         plot_attn_map(attn_map, path=path)
     return image
 
 
-if __name__ == '__main__':
-    dataset_list = ['cub']
-    aug = 'diff-mix' #'diff-aug/mixup" "real-mix"
-    finetune_model_key = 'db_latest'
+if __name__ == "__main__":
+    dataset_list = ["cub"]
+    aug = "diff-mix"  #'diff-aug/mixup" "real-mix"
+    finetuned_ckpt = "db_latest"
     guidance_scale = 7
     prompt = "a photo of a {name}"
 
-
-    
     for dataset in dataset_list:
-        lora_path, embed_path = parse_finetuned_ckpt(dataset=dataset, finetune_model_key=finetune_model_key)
-        AUGMENT_METHODS[aug].pipe=None
+        lora_path, embed_path = finetuned_ckpt_dir(
+            dataset=dataset, finetuned_ckpt=finetuned_ckpt
+        )
+        AUGMENT_METHODS[aug].pipe = None
         model = AUGMENT_METHODS[aug](
             embed_path=embed_path,
-            lora_path=lora_path, 
-            prompt=prompt, 
+            lora_path=lora_path,
+            prompt=prompt,
             guidance_scale=guidance_scale,
-            mask=False, 
+            mask=False,
             inverted=False,
-            device=f'cuda:1'
-            )
-        image = synthesize_images(model, 0.5, dataset,finetune_model_key=finetune_model_key,source_label=13, target_label=2, source_image=None,seed=0)
+            device=f"cuda:1",
+        )
+        image = synthesize_images(
+            model,
+            0.5,
+            dataset,
+            finetuned_ckpt=finetuned_ckpt,
+            source_label=13,
+            target_label=2,
+            source_image=None,
+            seed=0,
+        )

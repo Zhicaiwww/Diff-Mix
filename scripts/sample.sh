@@ -1,77 +1,29 @@
 
-function sample_fewshot {
-    dataset=$1
-    shot=$2
-    finetune_model_key=$3
-    sample_strategy=$4
-    strength=$5
-    strength_strategy=${6:-'fixed'}
-    multiplier=${7:-5}
-    batch_size=${8:-1}
-    resolution=${9:-512}
-    python  generate_translations.py \
-    --output-root              outputs/aug_samples_${shot}shot \
-    --finetune_model_key       $finetune_model_key \
-    --dataset                  $dataset \
-    --syn_dataset_mulitiplier  5 \
-    --examples-per-class       $shot \
-    --strength_strategy        $strength_strategy \
-    --beta_strength            5 \
-    --resolution               $resolution \
-    --batch_size               $batch_size \
-    --aug_strength             $strength \
-    --model-path               runwayml/stable-diffusion-v1-5 \
-    --sample_strategy             $sample_strategy \
-    --gpu-ids                  ${GPU_IDS[@]}
-    }
+DATASET='cub'
+FINETUNED_CKPT='ckpts/cub/shot-1-lora-rank10' 
+# set -1 for full shot
+SHOT=-1 
+# ['diff-mix', 'diff-aug', 'diff-gen', 'real-mix', 'real-aug', 'real-gen', 'ti_mix', 'ti_aug']
+SAMPLE_STRATEGY='diff-mix' 
+STRENGTH=0.8
+# ['fixed', 'uniform']. 'fixed': use fixed $STRENGTH, 'uniform': sample from [0.3, 0.5, 0.7, 0.9]
+STRENGTH_STRATEGY='fixed' 
+# expand the dataset by 5 times
+MULTIPLIER=5 
+# spwan 4 processes
+GPU_IDS=(0 1 2 3) 
 
-function sample {
-    dataset=$1
-    finetune_model_key=$2
-    sample_strategy=$3
-    strength=$4
-    strength_strategy=${5:-'fixed'}
-    multiplier=${6:-5}
-    batch_size=${7:-1}
-    resolution=${8:-512}
-    python  generate_translations.py \
-    --output-root              outputs/aug_samples \
-    --finetune_model_key       $finetune_model_key \
-    --dataset                  $dataset \
-    --syn_dataset_mulitiplier  $multiplier \
-    --strength_strategy        $strength_strategy \
-    --beta_strength            5 \
-    --resolution               $resolution \
-    --batch_size               $batch_size \
-    --aug_strength             $strength \
-    --model-path               runwayml/stable-diffusion-v1-5 \
-    --sample_strategy             $sample_strategy \
-    --gpu-ids                  ${GPU_IDS[@]}
-    }
+python  scripts/sample_mp.py \
+--model-path='runwayml/stable-diffusion-v1-5' \
+--output_root='outputs/aug_samples' \
+--dataset=$DATASET \
+--finetuned_ckpt=$FINETUNED_CKPT \
+--syn_dataset_mulitiplier=$MULTIPLIER \
+--strength_strategy=$STRENGTH_STRATEGY \
+--sample_strategy=$SAMPLE_STRATEGY \
+--examples_per_class=$SHOT \
+--resolution=512 \
+--batch_size=1 \
+--aug_strength=0.8 \
+--gpu-ids=${GPU_IDS[@]}
 
-function sample_corrupt {
-    dataset=$1
-    finetune_model_key=$2
-    sample_strategy=$3
-    strength=$4
-    corrupt_prob=$5
-    strength_strategy=${6:-'fixed'}
-    python  generate_translations.py \
-    --output-root              outputs/aug_samples_corrupt$corrupt_prob \
-    --finetune_model_key       $finetune_model_key \
-    --dataset                  $dataset \
-    --syn_dataset_mulitiplier  5 \
-    --strength_strategy        $strength_strategy \
-    --beta_strength            5 \
-    --resolution               512 \
-    --batch_size               1 \
-    --corrupt_prob             $corrupt_prob\
-    --aug_strength             $strength \
-    --model-path               runwayml/stable-diffusion-v1-5 \
-    --sample_strategy             $sample_strategy \
-    --gpu-ids                  ${GPU_IDS[@]}
-    }
-    
-
-
-# sample 'pet'        'db_ti_latest'          real-guidance                       0.1
