@@ -12,7 +12,6 @@ aug_samples/*
 _others/
 pyrightconfig.json
 # images
-*.png
 *.jpg
 *.pdf
 
