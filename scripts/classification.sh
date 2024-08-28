@@ -4,7 +4,9 @@
 
 GPU=1
 DATASET="cub"
-SYNDATA_DIR="aug_samples/cub/diff-mix_-1_fixed_0.7"
+SHOT=-1
+# "shot{args.examples_per_class}_{args.sample_strategy}_{args.strength_strategy}_{args.aug_strength}"
+SYNDATA_DIR="aug_samples/cub/shot${SHOT}_diff-mix_fixed_0.7" # shot-1 denotes full shot
 SYNDATA_P=0.1
 GAMMA=0.8
 
@@ -14,7 +16,7 @@ python downstream_tasks/train_hub.py \
     --syndata_p $SYNDATA_P \
     --model "resnet50" \
     --gamma $GAMMA \
-    --examples_per_class -1 \
+    --examples_per_class $SHOT \
     --gpu $GPU \
     --amp 2 \
     --note $(date +%m%d%H%M) \

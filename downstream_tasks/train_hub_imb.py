@@ -28,7 +28,6 @@ from downstream_tasks.imb_utils.randaugment import rand_augment_transform
 from downstream_tasks.imb_utils.util import *
 from downstream_tasks.losses import BalancedSoftmaxLoss, LDAMLoss
 from downstream_tasks.mixup import CutMix
-from utils.misc import parse_synthetic_dir
 
 NUM_CLASS_MAPPING = {
     "flower": 102,
@@ -65,7 +64,7 @@ def parse_args():
         type=str,
     )
     parser.add_argument(
-        "--synthetic_probability",
+        "--syndata_p",
         default=0.3,
         type=float,
     )
@@ -215,8 +214,8 @@ def main():
             str(args.imb_factor),
             str(args.rand_number),
             str(args.mixup_prob),
-            str(args.syndata_dir),
-            str(args.synthetic_probability),
+            os.path.basename(str(args.syndata_dir)),
+            str(args.syndata_p),
             str(args.gamma),
             args.exp_str,
         ]
@@ -392,18 +391,15 @@ def main_worker(gpu, ngpus_per_node, args):
         )
     print(args)
 
-    synthetic_dir = (
-        None
-        if args.syndata_dir is None
-        else parse_synthetic_dir(args.dataset, args.syndata_dir)
-    )
+    synthetic_dir = None if args.syndata_dir is None else args.syndata_dir
+
     train_dataset = IMBALANCE_DATASET_NAME_MAPPING[args.dataset](
         split="train",
         imbalance_factor=args.imb_factor,
         weighted_alpha=args.weighted_alpha,
         seed=args.rand_number,
         synthetic_dir=synthetic_dir,
-        synthetic_probability=args.synthetic_probability,
+        syndata_p=args.syndata_p,
         gamma=args.gamma,
         use_randaug=args.use_randaug,
         use_weighted_syn=args.use_weighted_syn,

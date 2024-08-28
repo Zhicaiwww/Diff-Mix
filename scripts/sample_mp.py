@@ -140,7 +140,10 @@ def main(args):
     os.makedirs(os.path.join(args.output_root, args.dataset), exist_ok=True)
 
     check_args_valid(args)
-    output_name = f"{args.sample_strategy}_{args.examples_per_class}_{args.strength_strategy}_{args.aug_strength}"
+    if args.task == "vanilla":
+        output_name = f"shot{args.examples_per_class}_{args.sample_strategy}_{args.strength_strategy}_{args.aug_strength}"
+    else:  # imbalanced
+        output_name = f"imb{args.imbalance_factor}_{args.sample_strategy}_{args.strength_strategy}_{args.aug_strength}"
     args.output_path = os.path.join(args.output_root, args.dataset, output_name)
 
     os.makedirs(args.output_path, exist_ok=True)

@@ -83,12 +83,12 @@ accelerate launch --mixed_precision='fp16' --main_process_port 29507 \
 
 ```bash
 DATASET='cub'
-FINETUNED_CKPT='ckpts/cub/shot-1-lora-rank10' 
 # set -1 for full shot
 SHOT=-1 
+FINETUNED_CKPT="ckpts/cub/shot${SHOT}-lora-rank10"
 # ['diff-mix', 'diff-aug', 'diff-gen', 'real-mix', 'real-aug', 'real-gen', 'ti_mix', 'ti_aug']
 SAMPLE_STRATEGY='diff-mix' 
-STRENGTH=0.7
+STRENGTH=0.8
 # ['fixed', 'uniform']. 'fixed': use fixed $STRENGTH, 'uniform': sample from [0.3, 0.5, 0.7, 0.9]
 STRENGTH_STRATEGY='fixed' 
 # expand the dataset by 5 times
@@ -98,7 +98,7 @@ GPU_IDS=(0 1 2 3)
 
 python  scripts/sample_mp.py \
 --model-path='runwayml/stable-diffusion-v1-5' \
---output_root='aug_samples' \
+--output_root='outputs/aug_samples' \
 --dataset=$DATASET \
 --finetuned_ckpt=$FINETUNED_CKPT \
 --syn_dataset_mulitiplier=$MULTIPLIER \
@@ -118,17 +118,19 @@ After completing the sampling process, you can integrate the synthetic data into
 ```
 GPU=1
 DATASET="cub"
-SYNDATA_DIR="aug_samples/cub/diff-mix_-1_fixed_0.7"
-SYNDATA_P=0.1 # The proportion of syndata in all training samples
-GAMMA=0.8 # label smoothing factor for syndata
+SHOT=-1
+# "shot{args.examples_per_class}_{args.sample_strategy}_{args.strength_strategy}_{args.aug_strength}"
+SYNDATA_DIR="aug_samples/cub/shot${SHOT}_diff-mix_fixed_0.7" # shot-1 denotes full shot
+SYNDATA_P=0.1
+GAMMA=0.8
 
 python downstream_tasks/train_hub.py \
     --dataset $DATASET \
-    --syndata_key $SYNDATA_KEY \
+    --syndata_dir $SYNDATA_DIR \
     --syndata_p $SYNDATA_P \
     --model "resnet50" \
     --gamma $GAMMA \
-    --examples_per_class -1 \
+    --examples_per_class $SHOT \
     --gpu $GPU \
     --amp 2 \
     --note $(date +%m%d%H%M) \
@@ -140,6 +142,7 @@ python downstream_tasks/train_hub.py \
     --weight_decay 0.0005 
 ```
 
+We also provides the scripts for robustness test and long-tail classification in `scripts/classification_waterbird.sh` and `scripts/classification_imb.sh`, respectively.
 ## Acknowledgements
 
 This project is built upon the repository [Da-fusion](https://github.com/brandontrabucco/da-fusion) and [diffusers](https://github.com/huggingface/diffusers). Special thanks to the contributors.

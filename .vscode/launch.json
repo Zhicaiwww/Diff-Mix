@@ -4,16 +4,7 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-        {
-            "name": "accelerate image classification",
-            "type": "python",
-            "request": "launch", 
-            "module": "accelerate.commands.launch",
-            "console": "integratedTerminal",
-            "env":{"CUDA_VISIBLE_DEVICES": "4,5,6,7"},
-            "justMyCode": true,
-            "args": [ "image_classification.py"]
-        },
+
         {
             "name": "Python: Finetune Script",
             "type": "python",
@@ -22,10 +13,9 @@
             "console": "integratedTerminal",
             "env":{"CUDA_VISIBLE_DEVICES": "0,1"},
             "args": [
-                "train_ti_lora.py",
+                "train_lora.py",
                 "--pretrained_model_name_or_path=runwayml/stable-diffusion-v1-5",
                 "--dataset_name=cub", // 请替换为实际的数据集名称
-                "--caption_column=text",
                 "--resolution=512", // 
                 "--random_flip",
                 "--max_train_steps=35000",
@@ -41,6 +31,36 @@
                 "--train_batch_size=1",
                 "--output_dir=/data/zhicai/code/Diff-Mix/outputs/finetune_model/finetune_ti_db/sd-cub-5shot-model-lora-rank10", // 请替换为实际的输出目录
                 "--report_to=tensorboard"
+        ]
+        },
+        {
+            "name": "Python: Finetune IMB Script",
+            "type": "python",
+            "request": "launch",
+            "module": "accelerate.commands.launch",
+            "console": "integratedTerminal",
+            "env":{"CUDA_VISIBLE_DEVICES": "4"},
+            "args": [
+                "train_lora.py",
+                "--pretrained_model_name_or_path=runwayml/stable-diffusion-v1-5",
+                "--dataset_name=cub", // 请替换为实际的数据集名称
+                "--resolution=512", // 
+                "--random_flip",
+                "--max_train_steps=35000",
+                "--num_train_epochs=10", //
+                "--checkpointing_steps=5000",
+                "--learning_rate=5e-05",
+                "--lr_scheduler=constant",
+                "--lr_warmup_steps=0",
+                "--seed=42",
+                "--rank=10",
+                "--local_files_only",
+                "--train_batch_size=1",
+                "--output_dir=ckpts/cub/IMB0.01_lora_rank10", // 请替换为实际的输出目录
+                "--report_to=tensorboard",
+                "--task=imbalanced",
+                "--imbalance_factor=0.01"
+
         ]
         },
         {
@@ -64,6 +84,28 @@
             "console": "integratedTerminal"
         },
         {
+            "name": "Python: Sample MP IMB",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/scripts/sample_mp.py",
+            "args": [
+                "--output_root", "aug_samples",
+                "--finetuned_ckpt", "ckpts/cub/shot-1-lora-rank10",
+                "--dataset", "cub",
+                "--syn_dataset_mulitiplier", "5",
+                "--strength_strategy", "fixed",
+                "--resolution", "512",
+                "--batch_size", "1",
+                "--aug_strength", "0.7",
+                "--model_path", "runwayml/stable-diffusion-v1-5",
+                "--sample_strategy", "diff-mix",
+                "--gpu_ids", "3", "4",
+                "--task", "imbalanced",
+                "--imbalance_factor", "0.01"
+            ],
+            "console": "integratedTerminal"
+        },
+        {
             "name": "Python: Train Hub",
             "type": "python",
             "request": "launch",
@@ -71,7 +113,7 @@
             "args": [
                 "--dataset", "cub",
                 "--syndata_p", "0.1",
-                "--syndata_dir", "mixup0.7",
+                "--syndata_dir", "outputs/aug_samples/cub/dreambooth-lora-mixup-Multi7-db_ti10000-Strength0.5",
                 "--model", "resnet50",
                 "--gamma", "0.8",
                 "--examples_per_class", "-1",
@@ -89,6 +131,55 @@
             "env": {
                 "DATE": "${command:python.interpreterPath} -c \"import datetime; print(datetime.datetime.now().strftime('%m%d%H%M'))\""
             }
+        },
+        {
+            "name": "Python: Train Hub Waterbird",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/downstream_tasks/train_hub_waterbird.py",
+            "args": [
+                "--dataset", "cub",
+                "--syndata_p", "0.1",
+                "--syndata_dir", "outputs/aug_samples/cub/dreambooth-lora-mixup-Multi7-db_ti10000-Strength0.5",
+                "--model", "resnet50",
+                "--gamma", "0.8",
+                "--examples_per_class", "-1",
+                "--gpu", "4",
+                "--amp", "2",
+                "--note", "${env:DATE}",
+                "--group_note", "test",
+                "--nepoch", "60",
+                "--res_mode", "224",
+                "--lr", "0.05",
+                "--seed", "0",
+                "--weight_decay", "0.0005"
+            ],
+            "console": "integratedTerminal",
+            "env": {
+                "DATE": "${command:python.interpreterPath} -c \"import datetime; print(datetime.datetime.now().strftime('%m%d%H%M'))\""
+            }
+        },
+        {
+            "name": "Python: Train Hub Imb",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/downstream_tasks/train_hub_imb.py",
+            "args": [
+                "--dataset", "cub",
+                "--loss_type", "CE",
+                "--lr", "0.005",
+                "--epochs", "200",
+                "--imb_factor", "0.01",
+                "-b", "128",
+                "--gpu", "4",
+                "--data_aug", "vanilla",
+                "--root_log", "outputs/results_cmo",
+                "--syndata_dir", "outputs/aug_samples_imbalance/cub/dreambooth-lora-mixup-Multi10-db_ti_latest_imb_0.1-Strength0.7",
+                "--syndata_p", "0.5",
+                "--gamma", "0.8",
+                "--use_weighted_syn"
+            ],
+            "console": "integratedTerminal",
         }
     ]
 }

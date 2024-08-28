@@ -19,7 +19,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../"))
 from dataset import DATASET_NAME_MAPPING, WaterBird
 from downstream_tasks.losses import LabelSmoothingLoss
 from downstream_tasks.mixup import CutMix, mixup_data
-from utils.misc import checked_has_run, parse_synthetic_dir
+from utils.misc import checked_has_run
 from utils.network import freeze_model
 
 #######################
@@ -31,7 +31,9 @@ from utils.network import freeze_model
 def formate_note(args):
 
     args.use_warmup = True
-    note = f"{args.note}_base_{args.nepoch}_{args.optimizer}_{args.res_mode}_{args.model}_lr{args.lr}_{args.syndata_dir}_{args.seed}"
+    note = f"{args.note}"
+    if args.syndata_dir is not None:
+        note = note + f"_{os.path.basename(args.syndata_dir[0])}"
     if args.use_cutmix:
         note = note + "_cutmix"
     if args.use_mixup:
@@ -64,7 +66,7 @@ parser.add_argument("--use_cutmix", default=False, action="store_true")
 parser.add_argument("--use_mixup", default=False, action="store_true")
 parser.add_argument("--criterion", default="ls", type=str)
 parser.add_argument(
-    "-g", "--gpu", default="1", type=int, help="example: 0 or 1, to use different gpu"
+    "-g", "--gpu", default="1", type=int"
 )
 parser.add_argument("-w", "--num_workers", default=12, help="num_workers of dataloader")
 parser.add_argument("-s", "--seed", default=2020, help="random seed")
@@ -194,13 +196,12 @@ use_amp = int(args.amp)  # use amp to accelerate training
 seed = int(args.seed)
 datasets_name = args.dataset
 num_workers = int(args.num_workers)
-args.note = formate_note(args)
 exp_dir = "outputs/result/{}/{}{}".format(
-    args.group_note, datasets_name, args.note
+    args.group_note, datasets_name, formate_note(args)
 )  # the folder to save model
 
-if checked_has_run(exp_dir, vars(args)):
-    exit()
+# if checked_has_run(exp_dir, vars(args)):
+#     exit()
 
 if args.lr is None:
     lr_begin = (args.batch_size / 256) * base_lr  # learning rate at begining
@@ -208,6 +209,7 @@ else:
     lr_begin = args.lr
 
 ##### CUDA device setting
+torch.cuda.set_device(args.gpu)
 
 ##### Random seed setting
 random.seed(seed)
@@ -225,7 +227,7 @@ re_size = args.resize
 crop_size = args.crop_size
 
 if args.syndata_dir is not None:
-    synthetic_dir = parse_synthetic_dir(datasets_name, args.syndata_dir)
+    synthetic_dir = args.syndata_dir
 else:
     synthetic_dir = None
 
@@ -284,7 +286,7 @@ train_loader = DataLoader(
     num_workers=num_workers,
 )
 eval_loader = DataLoader(
-    test_set, batch_size=batch_size, shuffle=False, num_workers=num_workers
+    test_set, batch_size=32, shuffle=False, num_workers=num_workers
 )
 
 
@@ -479,7 +481,7 @@ for epoch in range(args.nepoch):
 
             # 统计每个group的准确率
             for i, group in enumerate(groups):
-                group = str(group.item())  # 将group转换为字符串
+                group = str(group)  # 将group转换为字符串
                 group_stats[group]["total"] += 1
                 group_stats[group]["correct"] += int(
                     predicted[i].eq(targets[i].data).cpu()

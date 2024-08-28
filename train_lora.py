@@ -443,7 +443,7 @@ def parse_args():
         ),
     )
     parser.add_argument(
-        "--imbalanced_factor",
+        "--imbalance_factor",
         type=float,
         default=0.1,
         choices=[0.1, 0.02, 0.01],
@@ -607,7 +607,7 @@ def main():
                 resolution=args.resolution,
                 random_flip=args.random_flip,
                 use_placeholder=True,
-                imbalance_factor=args.imbalanced_factor,
+                imbalance_factor=args.imbalance_factor,
             )
         else:
             train_dataset = T2I_DATASET_NAME_MAPPING[args.dataset_name](
@@ -826,7 +826,6 @@ def main():
         train_sampler = train_dataset.get_weighted_sampler()
         train_dataloader = torch.utils.data.DataLoader(
             train_dataset,
-            shuffle=True,
             collate_fn=collate_fn,
             batch_size=args.train_batch_size,
             num_workers=args.dataloader_num_workers,
@@ -859,8 +858,10 @@ def main():
     )
 
     # Prepare everything with our `accelerator`.
-    lora_layers, text_encoder, optimizer, train_dataloader, lr_scheduler = accelerator.prepare(
+    lora_layers, text_encoder, optimizer, train_dataloader, lr_scheduler = (
+        accelerator.prepare(
             lora_layers, text_encoder, optimizer, train_dataloader, lr_scheduler
+        )
     )
     # We need to recalculate our total training steps as the size of the training dataloader may have changed.
     num_update_steps_per_epoch = math.ceil(

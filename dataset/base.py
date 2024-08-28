@@ -81,7 +81,7 @@ class SyntheticDataset(Dataset):
         self.class_names = list(set(self.meta_df["First Directory"].values))
         print(f"Syn numbers: {self.syn_nums}\n")
 
-    def get_syn_item_pd_raw(self, idx: int):
+    def get_syn_item_raw(self, idx: int):
         df_data = self.meta_df.iloc[idx]
         src_label = self.class2label[df_data["First Directory"]]
         tar_label = self.class2label[df_data["Second Directory"]]
@@ -92,7 +92,7 @@ class SyntheticDataset(Dataset):
         return self.syn_nums
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, int]:
-        path, src_label, target_label = self.get_syn_item_pd_raw(idx)
+        path, src_label, target_label = self.get_syn_item_raw(idx)
         image = Image.open(path).convert("RGB")
         return {
             "pixel_values": self.transform(image),
@@ -221,7 +221,7 @@ class HugFewShotDataset(Dataset):
             print("filter_df", self.target_class_num, len(df))
         return df
 
-    def get_syn_item_pd(self, idx: int):
+    def get_syn_item(self, idx: int):
 
         df_data = self.meta_df.iloc[idx]
         src_label = self.class2label[df_data["First Directory"]]
@@ -243,7 +243,7 @@ class HugFewShotDataset(Dataset):
             and np.random.uniform() < self.synthetic_probability
         ):
             syn_idx = np.random.choice(self.syn_nums)
-            path, label = self.get_syn_item_pd(syn_idx)
+            path, label = self.get_syn_item(syn_idx)
             image = Image.open(path).convert("RGB")
         else:
             image = self.get_image_by_idx(idx)
