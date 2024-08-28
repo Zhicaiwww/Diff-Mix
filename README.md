@@ -24,6 +24,13 @@ numpy==1.24.4
 ```
 ## Datasets 
 For convenience, well-structured datasets in Hugging Face can be utilized. The fine-grained datasets `CUB` and `Aircraft` we experimented with can be downloaded from [Multimodal-Fatima/CUB_train](https://huggingface.co/datasets/Multimodal-Fatima/CUB_train) and [Multimodal-Fatima/FGVC_Aircraft_train](https://huggingface.co/datasets/Multimodal-Fatima/FGVC_Aircraft_train), respectively. In case of encountering network connection problem during training, please pre-download the data from the website, and the saved local path `HUG_LOCAL_IMAGE_TRAIN_DIR` should be specified in the `dataset/instance/cub.py`. 
+
+
+
+## Fine-tune on a dataset 🔥
+### Pre-trained lora weights
+We provide the lora weights fine-tuned on the full dataset in case for fast reproducation on given datasets. One can download using the following link, and unzip the file into dir `ckpts` and the file structure look like:
+
 ```
 ckpts
 ├── cub                                                                                                                                                                                                                                          -packages/torch/nn/modules/module.py", line 1501, in _call_impl
@@ -32,13 +39,6 @@ ckpts
 │       └── pytorch_lora_weights.safetensors
 └── put_finetuned_ckpts_here.txt
 ```
-
-
-## Fine-tune on a dataset 🔥
-### Pre-trained lora weights
-We provide the lora weights fine-tuned on the full dataset in case for fast reproducation on given datasets. One can download using the following link, and unzip the file into dir `ckpts` and the file structure look like:
-
-
 
 | Dataset | data                                                             | ckpts (fullshot)                                                    |
 |---------|---------------------------------------------------------------------|---------------------------------------------------------------------|
